@@ -42,12 +42,21 @@ class Screen:
 
         self.main = displayio.Group(scale=1)
 
+    def resetMenus(self):
+        if subMenuOpen:
+            self.main.pop()
+            self.subMenuOpen = False
+            self.subMenu = None
+
+        self.inputCtrl.zeroIdxs()
+
 class IdleScreen(Screen):
 
     def __init__(self, monster):
         super().__init__(monster)
 
         self.inputCtrl = MainInputControl()
+        self.input = None
 
         self.subMenuOpen = False
         self.subMenu = None
@@ -148,10 +157,15 @@ class IdleScreen(Screen):
         self.monSprite.y = 29
         # Icon positions main screen
         self.statusSprite.x = 20
+        self.statusSprite.y = 2
         self.feedSprite.x = 62
+        self.feedSprite.y = 2
         self.trainSprite.x = 104
+        self.trainSprite.y = 1
         self.battleSprite.x = 146
+        self.battleSprite.y = 2
         self.pooSprite.x = 188
+        self.pooSprite.y = 2
         self.lightsSprite.x = 20
         self.lightsSprite.y = 100
         self.medicineSprite.x = 62
@@ -199,31 +213,38 @@ class IdleScreen(Screen):
         self.handleInput()
         self.updateSelPos()
         if self.subMenu:
-            self.subMenu.update()
+            self.subMenu.update(self.input)
 
     def handleInput(self):
-            input = self.inputCtrl.getInput()
+        self.input = self.inputCtrl.getInput()
 
-            if input:
-                if input == A_EVENT:
-                    if self.subMenuOpen:
-                        pass
-                    else:
-                        self.inputCtrl.incIdx()
-                elif input == B_EVENT:
-                    if not self.subMenuOpen:
-                        self.inputCtrl.decIdx()
-                    else:
-                        self.main.pop()
-                        self.subMenuOpen = False
-                        self.subMenu = None
-                elif input == C_EVENT:
-                    self.perfAction(self.inputCtrl.selectIdx)
+        if self.input:
+            if self.input == A_EVENT:
+                if self.subMenuOpen:
+                    pass
+                else:
+                    self.inputCtrl.incSelectIdx()
+            elif self.input == B_EVENT:
+                if not self.subMenuOpen:
+                    self.inputCtrl.decSelectIdx()
+            if self.input == D_EVENT:
+                if self.subMenu:
+                    self.main.pop()
+                    self.subMenuOpen = False
+                    self.subMenu = None
+                elif not self.inputCtrl.selectIdx == 0:
+                    self.inputCtrl.selectIdx = 0
+            elif self.input == C_EVENT and not self.subMenu:
+                self.perfAction(self.input)
 
-    def perfAction(self,idx):
-        if idx == 1  and not self.subMenuOpen:
+    def perfAction(self,input):
+        if self.inputCtrl.selectIdx == 1  and not self.subMenuOpen:
             self.subMenuOpen = True
             self.subMenu = StatusScreen(self.monster)
+            self.main.append(self.subMenu.main)
+        elif self.inputCtrl.selectIdx == 2 and not self.subMenuOpen:
+            self.subMenuOpen = True
+            self.subMenu = FeedScreen(self.monster,self.inputCtrl)
             self.main.append(self.subMenu.main)
 
 
@@ -287,31 +308,31 @@ class StatusScreen(Screen):
         )
 
         self.nameArea = label.Label(terminalio.FONT, text="Name: " + self.monster.name, color=0xFFFFFF)
-        self.nameArea.x = 10
+        self.nameArea.x = 5
         self.nameArea.y =10
 
         self.ageArea = label.Label(terminalio.FONT, text="Age: " + str(int(self.monster.age/86400)) + "y", color=0xFFFFFF)
-        self.ageArea.x = 10
+        self.ageArea.x = 5
         self.ageArea.y =20
 
-        self.weightArea = label.Label(terminalio.FONT, text="Weight: " + str(self.monster.weight), color=0xFFFFFF)
-        self.weightArea.x = 60
+        self.weightArea = label.Label(terminalio.FONT, text="Weight: " + str(self.monster.weight) + "g", color=0xFFFFFF)
+        self.weightArea.x = 55
         self.weightArea.y =20
 
         self.hungerArea = label.Label(terminalio.FONT, text="Hunger: " + str(self.monster.hunger), color=0xFFFFFF)
-        self.hungerArea.x = 10
+        self.hungerArea.x = 5
         self.hungerArea.y =30
 
         self.strengthArea = label.Label(terminalio.FONT, text="Strength: " + str(self.monster.strength), color=0xFFFFFF)
-        self.strengthArea.x = 10
+        self.strengthArea.x = 5
         self.strengthArea.y =40
 
         self.effortArea = label.Label(terminalio.FONT, text="Effort: " + str(self.monster.effort), color=0xFFFFFF)
-        self.effortArea.x = 10
+        self.effortArea.x = 5
         self.effortArea.y =50
 
-        self.monSprite.x = 85
-        self.monSprite.y = 27
+        self.monSprite.x = 80
+        self.monSprite.y = 30
 
         self.statsGroup = displayio.Group(scale=2)
         self.statsGroup.append(self.menuBgSprite)
@@ -330,15 +351,92 @@ class StatusScreen(Screen):
 
         self.idleAnimator = CharacterAnimator(self.monSprite,self.monster)
 
-    def update(self):
+    def update(self,input):
 
         self.idleAnimator.simpleIdle()
 
 
 class FeedScreen(Screen):
 
-    def __init__(self, monster):
+    def __init__(self, monster, inputCtrl):
         super().__init__(monster)
+
+        self.inputCtrl = inputCtrl
+
+        self.selSheet, self.selPalette = adafruit_imageload.load(
+            "/sprites/select.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.selPalette.make_transparent(0)
+        self.selPalette.make_transparent(1)
+        self.selPalette.make_transparent(2)
+        self.selPalette.make_transparent(3)
+        self.selSprite = displayio.TileGrid(
+            self.selSheet, pixel_shader=self.selPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+
+        self.meatSheet, self.meatPalette = adafruit_imageload.load(
+            "/sprites/meat.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.meatPalette.make_transparent(0)
+        self.meatSprite = displayio.TileGrid(
+            self.meatSheet, pixel_shader=self.meatPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.meatSprite.x = 20
+        self.meatSprite.y = 18
+
+        self.protienSheet, self.protienPalette = adafruit_imageload.load(
+            "/sprites/protien.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.protienPalette.make_transparent(0)
+        self.protienSprite = displayio.TileGrid(
+            self.protienSheet, pixel_shader=self.protienPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.protienSprite.x = 70
+        self.protienSprite.y = 18
+
+        self.selSprite.x = self.meatSprite.x
+        self.selSprite.y = self.meatSprite.y
+
+        foodGroup = displayio.Group(scale=2)
+        try:
+            foodGroup.append(self.selSprite)
+            foodGroup.append(self.meatSprite)
+            foodGroup.append(self.protienSprite)
+        except ValueError:
+            pass
+
+        self.main.append(foodGroup)
+
+    def update(self, input):
+        print(str(self.inputCtrl.feedIdx))
+        self.handleInput(input)
+        self.updateSelPos()
+
+    def handleInput(self,input):
+
+        if input:
+            if input == A_EVENT:
+                print("event")
+                self.inputCtrl.incFeedIdx()
+            elif input == B_EVENT:
+                self.inputCtrl.decFeedIdx()
+            elif input == C_EVENT:
+                self.perfAction()
+
+    def updateSelPos(self):
+        if self.inputCtrl.feedIdx == 0:
+            self.selSprite.x = self.meatSprite.x
+            self.selSprite.y = self.meatSprite.y
+        else:
+            self.selSprite.x = self.protienSprite.x
+            self.selSprite.y = self.protienSprite.y
+
+    def perfAction(self):
+        if self.inputCtrl.feedIdx == 0:
+            self.monster.feedMeat()
+        else:
+            self.monster.feedProtien()
+        pass
 
 class TrainScreen(Screen):
 

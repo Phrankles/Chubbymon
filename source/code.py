@@ -13,32 +13,20 @@ minTime = time.time()
 
 def initialize():
     global monster,currUi
-    monster = Monster("Chills",0,0,0,0,0,0,0,0,0,0,0,0,time.time(),time.time(),time.time())
+    monster = Monster("Chills",4,4,4,0,0,0,0,0,0,0,0,0,time.time(),time.time(),time.time())
     currUi = Ui(monster)
 
 def save():
     pass
 
-def updateMonster():
-
-    # Update things that happen each sec
-    global secTime
-    deltaTime = time.time() - secTime
-    if deltaTime >= 1:
-        monster.incAge(deltaTime)
-        secTime = time.time()
-
-    # Update things that happen each min
-    global minTime
-    if (time.time() - minTime) >= 60:
-        save()
-        minTime = time.time()
+def load():
+    pass
 
 # Load or create new data
 initialize()
 
 # Game loop
 while True:
-    updateMonster()
+    monster.update()
     currUi.update()
     time.sleep(1/15)

@@ -23,13 +23,15 @@ class Monster:
         self.timeSincePoop = timeSincePoop
 
     def incHunger(self):
-        self.hunger += 1
+        if self.hunger < 4:
+            self.hunger += 1
 
     def decHunger(self):
         self.hunger -= 1
 
     def incStrength(self):
-        self.strength += 1
+        if self.strength < 4:
+            self.strength += 1
 
     def decStrength(self):
         self.strength -= 1
@@ -77,6 +79,13 @@ class Monster:
         if self.hunger < 4:
             self.hunger += 1
             self.weight += 1
+        else:
+            self.overFeed()
+
+    def feedProtien(self):
+        if self.strength < 4:
+            self.strength += 1
+            self.weight += 2
         else:
             self.overFeed()
 
@@ -140,6 +149,7 @@ class Monster:
                 self.timeSinceTrain = time.time()
 
     def die(self):
+        print("dead")
         self.sickness = 0
         self.injury = 0
 

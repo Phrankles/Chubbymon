@@ -149,3 +149,9 @@ class CharacterAnimator:
                 else:
                     self.monSprite[0] = 6
             self.animTime = time.monotonic()
+
+    def feed(self):
+        pass
+
+    def poop(self):
+        pass

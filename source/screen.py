@@ -1,0 +1,392 @@
+#Screen class
+
+import displayio
+import adafruit_imageload
+from characteranimator import CharacterAnimator
+from adafruit_display_text import label
+import terminalio
+from inputctrl import MainInputControl
+from keypad import Event
+
+A_EVENT = Event(0, True)
+B_EVENT = Event(1, True)
+C_EVENT = Event(2, True)
+D_EVENT = Event(3, True)
+
+class Screen:
+
+    def __init__(self,monster):
+
+        self.monster = monster
+
+        #Monster Tile Grid load
+        self.monSheet, self.monPalette = adafruit_imageload.load(
+            "/sprites/" + self.monster.name + "/" + self.monster.name + ".bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.monPalette.make_transparent(0)
+        self.monSprite = displayio.TileGrid(
+            self.monSheet, pixel_shader=self.monPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+
+        #Select Tile Grid load
+        self.selectSheet, self.selectPalette = adafruit_imageload.load(
+            "/sprites/select.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.selectPalette.make_transparent(0)
+        self.selectPalette.make_transparent(1)
+        self.selectPalette.make_transparent(2)
+        self.selectPalette.make_transparent(3)
+        self.selectSprite = displayio.TileGrid(
+            self.selectSheet, pixel_shader=self.selectPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+
+        self.main = displayio.Group(scale=1)
+
+class IdleScreen(Screen):
+
+    def __init__(self, monster):
+        super().__init__(monster)
+
+        self.inputCtrl = MainInputControl()
+
+        self.subMenuOpen = False
+        self.subMenu = None
+
+        #BG Sprite load
+        self.idleBgSheet, self.idleBgPalette = adafruit_imageload.load(
+            "/sprites/" + self.monster.name + "/" + self.monster.name + "_bg.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.idleBgSprite = displayio.TileGrid(
+            self.idleBgSheet, pixel_shader=self.idleBgPalette, width=1, height=1, tile_width=120, tile_height=68
+        )
+
+        #Idle Menu Sprite load
+        self.statusSheet, self.statusPalette = adafruit_imageload.load(
+            "/sprites/status.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.feedSheet, self.feedPalette = adafruit_imageload.load(
+            "/sprites/feed.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.trainSheet, self.trainPalette = adafruit_imageload.load(
+            "/sprites/train.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.battleSheet, self.battlePalette = adafruit_imageload.load(
+            "/sprites/battle.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.pooSheet, self.pooPalette = adafruit_imageload.load(
+            "/sprites/poo.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.lightsSheet, self.lightsPalette = adafruit_imageload.load(
+            "/sprites/lights.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.medicineSheet, self.medicinePalette = adafruit_imageload.load(
+            "/sprites/medicine.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.journalSheet, self.journalPalette = adafruit_imageload.load(
+            "/sprites/journal.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.linkSheet, self.linkPalette = adafruit_imageload.load(
+            "/sprites/link.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.callSheet, self.callPalette = adafruit_imageload.load(
+            "/sprites/call.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.selectSheet, self.selectPalette = adafruit_imageload.load(
+            "/sprites/select.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+
+        #Set transparency index
+        self.statusPalette.make_transparent(0)
+        self.feedPalette.make_transparent(0)
+        self.trainPalette.make_transparent(0)
+        self.battlePalette.make_transparent(0)
+        self.pooPalette.make_transparent(0)
+        self.lightsPalette.make_transparent(0)
+        self.medicinePalette.make_transparent(0)
+        self.journalPalette.make_transparent(0)
+        self.linkPalette.make_transparent(0)
+        self.callPalette.make_transparent(0)
+        self.selectPalette.make_transparent(0)
+        self.selectPalette.make_transparent(1)
+        self.selectPalette.make_transparent(2)
+        self.selectPalette.make_transparent(3)
+
+
+        self.statusSprite = displayio.TileGrid(
+            self.statusSheet, pixel_shader=self.statusPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.feedSprite = displayio.TileGrid(
+            self.feedSheet, pixel_shader=self.feedPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.trainSprite = displayio.TileGrid(
+            self.trainSheet, pixel_shader=self.trainPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.battleSprite = displayio.TileGrid(
+            self.battleSheet, pixel_shader=self.battlePalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.pooSprite = displayio.TileGrid(
+            self.pooSheet, pixel_shader=self.pooPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.lightsSprite = displayio.TileGrid(
+            self.lightsSheet, pixel_shader=self.lightsPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.medicineSprite = displayio.TileGrid(
+            self.medicineSheet, pixel_shader=self.medicinePalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.journalSprite = displayio.TileGrid(
+            self.journalSheet, pixel_shader=self.journalPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.linkSprite = displayio.TileGrid(
+            self.linkSheet, pixel_shader=self.linkPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        self.callSprite = displayio.TileGrid(
+            self.callSheet, pixel_shader=self.callPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+
+        #Monster initial position
+        self.monSprite.x = 50
+        self.monSprite.y = 29
+        # Icon positions main screen
+        self.statusSprite.x = 20
+        self.feedSprite.x = 62
+        self.trainSprite.x = 104
+        self.battleSprite.x = 146
+        self.pooSprite.x = 188
+        self.lightsSprite.x = 20
+        self.lightsSprite.y = 100
+        self.medicineSprite.x = 62
+        self.medicineSprite.y = 100
+        self.journalSprite.x = 104
+        self.journalSprite.y = 100
+        self.linkSprite.x = 146
+        self.linkSprite.y = 100
+        self.callSprite.x = 188
+        self.callSprite.y = 100
+
+        self.charAnimator = CharacterAnimator(self.monSprite,self.monster)
+
+        self.charGroup = displayio.Group(scale=2)
+        self.charGroup.append(self.monSprite)
+
+        self.bgGroup = displayio.Group(scale=2)
+        self.bgGroup.append(self.idleBgSprite)
+
+
+        self.selectGroup = displayio.Group(scale=1)
+        self.selectGroup.append(self.selectSprite)
+
+        self.iconGroup = displayio.Group(scale=1)
+        self.iconGroup.append(self.statusSprite)
+        self.iconGroup.append(self.feedSprite)
+        self.iconGroup.append(self.trainSprite)
+        self.iconGroup.append(self.battleSprite)
+        self.iconGroup.append(self.pooSprite)
+        self.iconGroup.append(self.lightsSprite)
+        self.iconGroup.append(self.medicineSprite)
+        self.iconGroup.append(self.journalSprite)
+        self.iconGroup.append(self.linkSprite)
+        self.iconGroup.append(self.callSprite)
+
+        self.main.append(self.bgGroup)
+        self.main.append(self.charGroup)
+        self.main.append(self.selectGroup)
+        self.main.append(self.iconGroup)
+
+
+
+    def update(self):
+        self.charAnimator.randomIdle()
+        self.handleInput()
+        self.updateSelPos()
+        if self.subMenu:
+            self.subMenu.update()
+
+    def handleInput(self):
+            input = self.inputCtrl.getInput()
+
+            if input:
+                if input == A_EVENT:
+                    if self.subMenuOpen:
+                        pass
+                    else:
+                        self.inputCtrl.incIdx()
+                elif input == B_EVENT:
+                    if not self.subMenuOpen:
+                        self.inputCtrl.decIdx()
+                    else:
+                        self.main.pop()
+                        self.subMenuOpen = False
+                        self.subMenu = None
+                elif input == C_EVENT:
+                    self.perfAction(self.inputCtrl.selectIdx)
+
+    def perfAction(self,idx):
+        if idx == 1  and not self.subMenuOpen:
+            self.subMenuOpen = True
+            self.subMenu = StatusScreen(self.monster)
+            self.main.append(self.subMenu.main)
+
+
+
+    def updateSelPos(self):
+        if self.inputCtrl.selectIdx != 0:
+            try:
+                self.main.append(self.selectGroup)
+                self.main.append(self.iconGroup)
+            except ValueError:
+                pass
+        if self.inputCtrl.selectIdx == 0:
+            try:
+                self.main.remove(self.iconGroup)
+                self.main.remove(self.selectGroup)
+            except ValueError:
+                pass
+        elif self.inputCtrl.selectIdx == 1:
+            self.selectSprite.x = self.statusSprite.x
+            self.selectSprite.y = self.statusSprite.y
+        elif self.inputCtrl.selectIdx == 2:
+            self.selectSprite.x = self.feedSprite.x
+            self.selectSprite.y = self.feedSprite.y
+        elif self.inputCtrl.selectIdx == 3:
+            self.selectSprite.x = self.trainSprite.x
+            self.selectSprite.y = self.trainSprite.y
+        elif self.inputCtrl.selectIdx == 4:
+            self.selectSprite.x = self.battleSprite.x
+            self.selectSprite.y = self.battleSprite.y
+        elif self.inputCtrl.selectIdx == 5:
+            self.selectSprite.x = self.pooSprite.x
+            self.selectSprite.y = self.pooSprite.y
+        elif self.inputCtrl.selectIdx == 6:
+            self.selectSprite.x = self.lightsSprite.x
+            self.selectSprite.y = self.lightsSprite.y
+        elif self.inputCtrl.selectIdx == 7:
+            self.selectSprite.x = self.medicineSprite.x
+            self.selectSprite.y = self.medicineSprite.y
+        elif self.inputCtrl.selectIdx == 8:
+            self.selectSprite.x = self.journalSprite.x
+            self.selectSprite.y = self.journalSprite.y
+        elif self.inputCtrl.selectIdx == 9:
+            self.selectSprite.x = self.linkSprite.x
+            self.selectSprite.y = self.linkSprite.y
+        elif self.inputCtrl.selectIdx == 10:
+            self.selectSprite.x = self.callSprite.x
+            self.selectSprite.y = self.callSprite.y
+
+class StatusScreen(Screen):
+
+    def __init__(self, monster):
+        super().__init__(monster)
+
+
+        self.menuBgSheet,self.menuBgPalette = adafruit_imageload.load(
+            "/sprites/menu_bg.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+
+        self.menuBgSprite = displayio.TileGrid(
+            self.menuBgSheet, pixel_shader=self.menuBgPalette, width=1, height=1, tile_width=120, tile_height=68
+        )
+
+        self.nameArea = label.Label(terminalio.FONT, text="Name: " + self.monster.name, color=0xFFFFFF)
+        self.nameArea.x = 10
+        self.nameArea.y =10
+
+        self.ageArea = label.Label(terminalio.FONT, text="Age: " + str(int(self.monster.age/86400)) + "y", color=0xFFFFFF)
+        self.ageArea.x = 10
+        self.ageArea.y =20
+
+        self.weightArea = label.Label(terminalio.FONT, text="Weight: " + str(self.monster.weight), color=0xFFFFFF)
+        self.weightArea.x = 60
+        self.weightArea.y =20
+
+        self.hungerArea = label.Label(terminalio.FONT, text="Hunger: " + str(self.monster.hunger), color=0xFFFFFF)
+        self.hungerArea.x = 10
+        self.hungerArea.y =30
+
+        self.strengthArea = label.Label(terminalio.FONT, text="Strength: " + str(self.monster.strength), color=0xFFFFFF)
+        self.strengthArea.x = 10
+        self.strengthArea.y =40
+
+        self.effortArea = label.Label(terminalio.FONT, text="Effort: " + str(self.monster.effort), color=0xFFFFFF)
+        self.effortArea.x = 10
+        self.effortArea.y =50
+
+        self.monSprite.x = 85
+        self.monSprite.y = 27
+
+        self.statsGroup = displayio.Group(scale=2)
+        self.statsGroup.append(self.menuBgSprite)
+        self.statsGroup.append(self.nameArea)
+        self.statsGroup.append(self.ageArea)
+        self.statsGroup.append(self.weightArea)
+        self.statsGroup.append(self.hungerArea)
+        self.statsGroup.append(self.strengthArea)
+        self.statsGroup.append(self.effortArea)
+        self.statsGroup.append(self.monSprite)
+        try:
+            
+            self.main.append(self.statsGroup)
+        except ValueError:
+            pass
+
+        self.idleAnimator = CharacterAnimator(self.monSprite,self.monster)
+
+    def update(self):
+
+        self.idleAnimator.simpleIdle()
+
+
+class FeedScreen(Screen):
+
+    def __init__(self, monster):
+        super().__init__(monster)
+
+class TrainScreen(Screen):
+
+    def __init__(self, monster):
+        super().__init__(monster)
+
+class BattleScreen(Screen):
+
+    def __init__(self, monster):
+        super().__init__(monster)
+
+class BattleScreen(Screen):
+
+    def __init__(self, monster):
+        super().__init__(monster)
+
+class LightsScreen(Screen):
+
+    def __init__(self, monster):
+        super().__init__(monster)
+
+class MedicalScreen(Screen):
+
+    def __init__(self, monster):
+        super().__init__(monster)
+
+class JournalScreen(Screen):
+
+    def __init__(self, monster):
+        super().__init__(monster)
+
+class ConnectScreen(Screen):
+
+    def __init__(self, monster):
+        super().__init__(monster)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

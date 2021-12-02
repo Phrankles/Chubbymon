@@ -20,3 +20,5 @@ Credits:
 Programming: Phrankles
 
 Art Design: JemSoon
+
+Reverse Engineering and Comm Protocol: Bladesaber

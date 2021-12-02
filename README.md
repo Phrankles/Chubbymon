@@ -23,4 +23,4 @@ Programming: Phrankles
 
 Art Design: JemSoon
 
-Reverse Engineering and Comm Protocol: BladeSaber
+Reverse Engineering and Comm Protocol: BladeSabre

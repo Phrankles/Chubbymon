@@ -16,4 +16,5 @@ Connectivity (battle) with many existing V-Pets via reverse engineering of Comm 
 Credits:
 
 Programming: Phrankles
+
 Art Design: JemSoon

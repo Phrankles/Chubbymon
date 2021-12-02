@@ -7,7 +7,7 @@ Features:
 
 Most of the features V-Pet fans will be familiar with (feeding, cleaning, training, competing, etc...)
 
-Customizable animated asset packs
+Customizable full color animated asset packs
 
 Planned Features:
 

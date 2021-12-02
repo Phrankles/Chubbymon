@@ -1,5 +1,5 @@
 # Chubbymon
-V-Pet Project
+PRE-RELEASE V-Pet Project
 
 Customizable V-Pet project for RP2040 (or other CircuitPython) boards with a 240x135 full color screen and four buttons (additional hardware optional).
 

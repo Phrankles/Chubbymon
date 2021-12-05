@@ -155,8 +155,8 @@ class IdleScreen(Screen):
         )
 
         #Monster initial position
-        self.monSprite.x = 100
-        self.monSprite.y = 100
+        self.monSprite.x = 132 - self.monster.resolution
+        self.monSprite.y = 132 - self.monster.resolution
         # Icon positions main screen
         self.statusSprite.x = 20
         self.statusSprite.y = 2
@@ -179,9 +179,9 @@ class IdleScreen(Screen):
         self.callSprite.x = 188
         self.callSprite.y = 100
 
-        self.charGroup = displayio.Group(scale=1)
+        #self.charGroup = displayio.Group(scale=1)
 
-        self.charGroup.append(self.monSprite)
+        #self.charGroup.append(self.monSprite)
 
         self.bgGroup = displayio.Group(scale=2)
         self.bgGroup.append(self.idleBgSprite)
@@ -203,14 +203,15 @@ class IdleScreen(Screen):
         self.iconGroup.append(self.callSprite)
 
         self.main.append(self.bgGroup)
-        self.main.append(self.charGroup)
+        self.main.append(self.monSprite)
         self.main.append(self.selectGroup)
         self.main.append(self.iconGroup)
 
 
 
     def update(self):
-        self.charAnimator.randomIdle()
+        if not self.subMenu:
+            self.charAnimator.randomIdle()
         self.handleInput()
         self.updateSelPos()
         if self.subMenu:
@@ -230,9 +231,13 @@ class IdleScreen(Screen):
                     self.inputCtrl.decSelectIdx()
             if self.input == D_EVENT:
                 if self.subMenu:
+                    self.main.remove(self.monSprite)
                     self.main.pop()
                     self.subMenuOpen = False
                     self.subMenu = None
+                    self.monSprite.x = 132 - self.monster.resolution
+                    self.monSprite.y = 132 - self.monster.resolution
+                    self.main.insert(1,self.monSprite)
                 elif not self.inputCtrl.selectIdx == 0:
                     self.inputCtrl.selectIdx = 0
             elif self.input == C_EVENT and not self.subMenu:
@@ -241,8 +246,7 @@ class IdleScreen(Screen):
     def perfAction(self,input):
         if self.inputCtrl.selectIdx == 1  and not self.subMenuOpen:
             self.subMenuOpen = True
-            self.subMenu = StatusScreen(self.monster)
-            self.main.append(self.subMenu.main)
+            self.subMenu = StatusScreen(self.monster,self.charAnimator,self.main)
         elif self.inputCtrl.selectIdx == 2 and not self.subMenuOpen:
             self.subMenuOpen = True
             self.subMenu = FeedScreen(self.monster,self.charAnimator,self.main,self.inputCtrl)
@@ -293,11 +297,15 @@ class IdleScreen(Screen):
             self.selectSprite.x = self.callSprite.x
             self.selectSprite.y = self.callSprite.y
 
-class StatusScreen(Screen):
+class StatusScreen():
 
-    def __init__(self, monster):
-        super().__init__(monster)
+    def __init__(self, monster, charAnimator, main):
 
+        self.charAnimator = charAnimator
+
+        self.monster = monster
+
+        self.main = main
 
         self.menuBgSheet,self.menuBgPalette = adafruit_imageload.load(
             "/sprites/menu_bg.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
@@ -331,8 +339,10 @@ class StatusScreen(Screen):
         self.effortArea.x = 5
         self.effortArea.y =50
 
-        self.monSprite.x = 80
-        self.monSprite.y = 30
+        self.charAnimator.monSprite.x = 80 + self.monster.resolution + 32
+        self.charAnimator.monSprite.y = 30 + self.monster.resolution - 32
+
+        self.main.remove(self.charAnimator.monSprite)
 
         self.statsGroup = displayio.Group(scale=2)
         self.statsGroup.append(self.menuBgSprite)
@@ -342,24 +352,22 @@ class StatusScreen(Screen):
         self.statsGroup.append(self.hungerArea)
         self.statsGroup.append(self.strengthArea)
         self.statsGroup.append(self.effortArea)
-        self.statsGroup.append(self.monSprite)
-        try:
-            
+        try:            
             self.main.append(self.statsGroup)
+            self.main.append(self.charAnimator.monSprite)
         except ValueError:
             pass
 
-        self.idleAnimator = CharacterAnimator(self.monSprite,self.monster)
-
     def update(self,input):
 
-        self.idleAnimator.simpleIdle()
+        self.charAnimator.simpleIdle()
 
 
 class FeedScreen(Screen):
 
     def __init__(self, monster, charAnimator, main, inputCtrl):
-        super().__init__(monster)
+
+        self.monster = monster
 
         self.charAnimator = charAnimator
         self.main = main

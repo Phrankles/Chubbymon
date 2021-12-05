@@ -23,9 +23,9 @@ class CharacterAnimator:
     def walkUpRight(self):
 
         self.monSprite.flip_x = True
-        if self.monSprite.y >= 65:
+        if self.monSprite.y >= 97 - self.monster.resolution: #65:
             self.monSprite.y -= 3
-        if self.monSprite.x <= 220:
+        if self.monSprite.x <= 252 - self.monster.resolution: #220:
             self.monSprite.x += 3
         if self.monSprite[0] != 8:
             self.monSprite[0] = 8
@@ -37,9 +37,9 @@ class CharacterAnimator:
     def walkUpLeft(self):
 
         self.monSprite.flip_x = False
-        if self.monSprite.y >= 65:
+        if self.monSprite.y >= 97 - self.monster.resolution: #65:
             self.monSprite.y -= 3
-        if self.monSprite.x >= -10:
+        if self.monSprite.x >= 22 - self.monster.resolution: #-10:
             self.monSprite.x -= 3
         if self.monSprite[0] != 8:
             self.monSprite[0] = 8
@@ -51,9 +51,9 @@ class CharacterAnimator:
     def walkDownRight(self):
 
         self.monSprite.flip_x = True
-        if self.monSprite.y <= 110:
+        if self.monSprite.y <= 142 - self.monster.resolution: #110:
             self.monSprite.y += 3
-        if self.monSprite.x <= 220:
+        if self.monSprite.x <= 252 - self.monster.resolution: #220:
             self.monSprite.x += 3
         if self.monSprite[0] != 0:
             self.monSprite[0] = 0
@@ -64,9 +64,9 @@ class CharacterAnimator:
     def walkDownLeft(self):
 
         self.monSprite.flip_x = False
-        if self.monSprite.y <= 110:
+        if self.monSprite.y <= 142 - self.monster.resolution: #110:
             self.monSprite.y += 3
-        if self.monSprite.x >= -10:
+        if self.monSprite.x >= 22 - self.monster.resolution: #-10:
             self.monSprite.x -= 3
         if self.monSprite[0] != 0:
             self.monSprite[0] = 0
@@ -139,6 +139,8 @@ class CharacterAnimator:
 
     def simpleIdle(self):
         #simple 2 frame idle animation (bg characters)
+        if self.monSprite.flip_x:
+            self.monSprite.flip_x = False
         if (self.animTime + .33) < time.monotonic():            
             if self.monster.isHappy():
                 if self.monSprite[0] != 7:
@@ -146,15 +148,15 @@ class CharacterAnimator:
                 else:
                     self.monSprite[0] = 6
             elif self.monster.isContent():
-                if self.monSprite[0] != 4:
-                    self.monSprite[0] = 4
+                if self.monSprite[0] != 2:
+                    self.monSprite[0] = 2
                 else:
-                    self.monSprite[0] = 6
+                    self.monSprite[0] = 1
             elif self.monster.isMad():
                 if self.monSprite[0] != 3:
                     self.monSprite[0] = 3
                 else:
-                    self.monSprite[0] = 6
+                    self.monSprite[0] = 4
             self.animTime = time.monotonic()
 
     def feedMeat(self):
@@ -208,10 +210,10 @@ class CharacterAnimator:
 
         if self.monSprite.flip_x:
             meatSprite.flip_x = True
-            meatSprite.x += 20
+            meatSprite.x += (20 + (self.monster.resolution - 32))
         else:
-            meatSprite.x -= 20
-
+            meatSprite.x -= (20 - (self.monster.resolution - 32))
+        meatSprite.y = meatSprite.y + 2(self.monster.resolution - 32)
         self.animLayer.append(meatSprite)
         meatSprite[0] = 0
         self.monSprite[0] = 1

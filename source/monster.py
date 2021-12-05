@@ -132,7 +132,7 @@ class Monster:
             self.weight = 10
 
     def consumeHunger(self):
-        if (time.time() - self.timeSinceEat) > 10:
+        if (time.time() - self.timeSinceEat) > 100:
             if self.hunger > 0:
                 self.hunger -= 1
                 self.timeSinceEat = time.time()
@@ -143,7 +143,7 @@ class Monster:
         pass
 
     def consumeStrength(self):
-        if (time.time() - self.timeSinceTrain) > 10:
+        if (time.time() - self.timeSinceTrain) > 100:
             if self.strength > 0:
                 self.strength -= 1
                 self.timeSinceTrain = time.time()

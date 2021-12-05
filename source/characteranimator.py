@@ -1,6 +1,8 @@
 # Character Animator
 import time
 import random
+import adafruit_imageload
+import displayio
 
 class CharacterAnimator:
 
@@ -16,12 +18,14 @@ class CharacterAnimator:
         self.direction = 0
         self.distance = 0
 
+        self.animLayer = displayio.Group(scale=1)
+
     def walkUpRight(self):
 
         self.monSprite.flip_x = True
-        if self.monSprite.y >= 15:
+        if self.monSprite.y >= 65:
             self.monSprite.y -= 3
-        if self.monSprite.x <= 95:
+        if self.monSprite.x <= 220:
             self.monSprite.x += 3
         if self.monSprite[0] != 8:
             self.monSprite[0] = 8
@@ -33,7 +37,7 @@ class CharacterAnimator:
     def walkUpLeft(self):
 
         self.monSprite.flip_x = False
-        if self.monSprite.y >= 15:
+        if self.monSprite.y >= 65:
             self.monSprite.y -= 3
         if self.monSprite.x >= -10:
             self.monSprite.x -= 3
@@ -47,9 +51,9 @@ class CharacterAnimator:
     def walkDownRight(self):
 
         self.monSprite.flip_x = True
-        if self.monSprite.y <= 35:
+        if self.monSprite.y <= 110:
             self.monSprite.y += 3
-        if self.monSprite.x <= 95:
+        if self.monSprite.x <= 220:
             self.monSprite.x += 3
         if self.monSprite[0] != 0:
             self.monSprite[0] = 0
@@ -60,7 +64,7 @@ class CharacterAnimator:
     def walkDownLeft(self):
 
         self.monSprite.flip_x = False
-        if self.monSprite.y <= 35:
+        if self.monSprite.y <= 110:
             self.monSprite.y += 3
         if self.monSprite.x >= -10:
             self.monSprite.x -= 3
@@ -68,6 +72,7 @@ class CharacterAnimator:
             self.monSprite[0] = 0
         else:
             self.monSprite[0] = 1
+
         self.animTime = time.monotonic()
 
     def idleInPlace(self):
@@ -99,7 +104,7 @@ class CharacterAnimator:
         #Generate random movement
         if self.distance <= 0:
             self.direction = random.randint(1,10)
-            self.distance = random.randint(2,5)
+            self.distance = random.randint(2,10)
 
         if (self.animTime + .33) < time.monotonic():
             #Up Right
@@ -124,6 +129,8 @@ class CharacterAnimator:
 
             #Idle
             else:
+                if self.distance > 4:
+                    self.distance = 4
                 self.idleInPlace()
                 self.distance -= 1
 
@@ -150,8 +157,80 @@ class CharacterAnimator:
                     self.monSprite[0] = 6
             self.animTime = time.monotonic()
 
-    def feed(self):
-        pass
+    def feedMeat(self):
+        meatSheet, meatPalette = adafruit_imageload.load(
+            "/sprites/animations/eat_meat.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        meatPalette.make_transparent(0)
+        meatSprite = displayio.TileGrid(
+            meatSheet, pixel_shader=meatPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        meatSprite.x = self.monSprite.x
+        meatSprite.y = self.monSprite.y
+
+        if self.monSprite.flip_x:
+            meatSprite.flip_x = True
+            meatSprite.x += 20
+        else:
+            meatSprite.x -= 20
+
+        self.animLayer.append(meatSprite)
+        meatSprite[0] = 0
+        self.monSprite[0] = 1
+        time.sleep(.5)
+        self.monSprite[0] = 5
+        time.sleep(.5)
+        meatSprite[0] = 1
+        self.monSprite[0] = 1
+        time.sleep(.5)
+        self.monSprite[0] = 5
+        time.sleep(.5)        
+        meatSprite[0] = 2
+        self.monSprite[0] = 1
+        time.sleep(.5)        
+        self.monSprite[0] = 5
+        time.sleep(.5)
+        self.monSprite[0] = 1
+        self.animLayer.pop()
+        time.sleep(.5)
+
+    def feedProtien(self):
+
+        meatSheet, meatPalette = adafruit_imageload.load(
+            "/sprites/animations/eat_meat.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        meatPalette.make_transparent(0)
+        meatSprite = displayio.TileGrid(
+            meatSheet, pixel_shader=meatPalette, width=1, height=1, tile_width=32, tile_height=32
+        )
+        meatSprite.x = self.monSprite.x
+        meatSprite.y = self.monSprite.y
+
+        if self.monSprite.flip_x:
+            meatSprite.flip_x = True
+            meatSprite.x += 20
+        else:
+            meatSprite.x -= 20
+
+        self.animLayer.append(meatSprite)
+        meatSprite[0] = 0
+        self.monSprite[0] = 1
+        time.sleep(.5)
+        self.monSprite[0] = 5
+        time.sleep(.5)
+        meatSprite[0] = 1
+        self.monSprite[0] = 1
+        time.sleep(.5)
+        self.monSprite[0] = 5
+        time.sleep(.5)        
+        meatSprite[0] = 2
+        self.monSprite[0] = 1
+        time.sleep(.5)        
+        self.monSprite[0] = 5
+        time.sleep(.5)
+        self.monSprite[0] = 1
+        self.animLayer.pop()
+        time.sleep(.5)
 
     def poop(self):
         pass

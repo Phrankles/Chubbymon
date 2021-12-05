@@ -25,7 +25,7 @@ class Screen:
         )
         self.monPalette.make_transparent(0)
         self.monSprite = displayio.TileGrid(
-            self.monSheet, pixel_shader=self.monPalette, width=1, height=1, tile_width=32, tile_height=32
+            self.monSheet, pixel_shader=self.monPalette, width=1, height=1, tile_width=self.monster.resolution, tile_height=self.monster.resolution
         )
 
         #Select Tile Grid load
@@ -39,6 +39,8 @@ class Screen:
         self.selectSprite = displayio.TileGrid(
             self.selectSheet, pixel_shader=self.selectPalette, width=1, height=1, tile_width=32, tile_height=32
         )
+
+        self.charAnimator = CharacterAnimator(self.monSprite,self.monster)
 
         self.main = displayio.Group(scale=1)
 
@@ -153,8 +155,8 @@ class IdleScreen(Screen):
         )
 
         #Monster initial position
-        self.monSprite.x = 50
-        self.monSprite.y = 29
+        self.monSprite.x = 100
+        self.monSprite.y = 100
         # Icon positions main screen
         self.statusSprite.x = 20
         self.statusSprite.y = 2
@@ -177,9 +179,8 @@ class IdleScreen(Screen):
         self.callSprite.x = 188
         self.callSprite.y = 100
 
-        self.charAnimator = CharacterAnimator(self.monSprite,self.monster)
+        self.charGroup = displayio.Group(scale=1)
 
-        self.charGroup = displayio.Group(scale=2)
         self.charGroup.append(self.monSprite)
 
         self.bgGroup = displayio.Group(scale=2)
@@ -244,8 +245,7 @@ class IdleScreen(Screen):
             self.main.append(self.subMenu.main)
         elif self.inputCtrl.selectIdx == 2 and not self.subMenuOpen:
             self.subMenuOpen = True
-            self.subMenu = FeedScreen(self.monster,self.inputCtrl)
-            self.main.append(self.subMenu.main)
+            self.subMenu = FeedScreen(self.monster,self.charAnimator,self.main,self.inputCtrl)
 
 
 
@@ -358,10 +358,15 @@ class StatusScreen(Screen):
 
 class FeedScreen(Screen):
 
-    def __init__(self, monster, inputCtrl):
+    def __init__(self, monster, charAnimator, main, inputCtrl):
         super().__init__(monster)
 
+        self.charAnimator = charAnimator
+        self.main = main
+
         self.inputCtrl = inputCtrl
+
+        self.ready = False
 
         self.selSheet, self.selPalette = adafruit_imageload.load(
             "/sprites/select.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
@@ -408,15 +413,16 @@ class FeedScreen(Screen):
         self.main.append(foodGroup)
 
     def update(self, input):
-        print(str(self.inputCtrl.feedIdx))
-        self.handleInput(input)
+        if not self.ready:
+            self.ready = True
+        else:
+            self.handleInput(input)
         self.updateSelPos()
 
     def handleInput(self,input):
 
         if input:
             if input == A_EVENT:
-                print("event")
                 self.inputCtrl.incFeedIdx()
             elif input == B_EVENT:
                 self.inputCtrl.decFeedIdx()
@@ -434,6 +440,15 @@ class FeedScreen(Screen):
     def perfAction(self):
         if self.inputCtrl.feedIdx == 0:
             self.monster.feedMeat()
+            temp = self.main.pop()
+            temp2 = self.main.pop()
+            temp3 = self.main.pop()
+            self.main.append(self.charAnimator.animLayer)
+            self.charAnimator.feedMeat()
+            self.main.pop()
+            self.main.append(temp3)
+            self.main.append(temp2)
+            self.main.append(temp)
         else:
             self.monster.feedProtien()
         pass

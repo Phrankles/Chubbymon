@@ -4,7 +4,7 @@ import time
 
 class Monster:
 
-    def __init__(self,name,hunger,strength,effort,power,age,weight,type,numPoop,overFeeds,sickness,injury,ageToEvo,timeSinceEat,timeSinceTrain,timeSincePoop):
+    def __init__(self,name,hunger,strength,effort,power,age,weight,monType,evoStage,numPoop,overFeeds,sickness,injury,ageToEvo,timeSinceEat,timeSinceTrain,timeSincePoop,evolvesTo,resolution):
         self.name = name
         self.hunger = hunger
         self.strength = strength
@@ -12,7 +12,8 @@ class Monster:
         self.effort = effort
         self.age = age
         self.weight = weight
-        self.type = type
+        self.monType = monType
+        self.evoStage = evoStage
         self.numPoop = numPoop
         self.overFeeds = overFeeds
         self.sickness = sickness
@@ -21,6 +22,8 @@ class Monster:
         self.timeSinceEat = timeSinceEat
         self.timeSinceTrain = timeSinceTrain
         self.timeSincePoop = timeSincePoop
+        self.evolvesTo = evolvesTo
+        self.resolution = resolution
 
     def incHunger(self):
         if self.hunger < 4:
@@ -129,7 +132,7 @@ class Monster:
             self.weight = 10
 
     def consumeHunger(self):
-        if (time.time() - self.timeSinceEat) > 30:
+        if (time.time() - self.timeSinceEat) > 10:
             if self.hunger > 0:
                 self.hunger -= 1
                 self.timeSinceEat = time.time()
@@ -140,7 +143,7 @@ class Monster:
         pass
 
     def consumeStrength(self):
-        if (time.time() - self.timeSinceTrain) > 30:
+        if (time.time() - self.timeSinceTrain) > 10:
             if self.strength > 0:
                 self.strength -= 1
                 self.timeSinceTrain = time.time()

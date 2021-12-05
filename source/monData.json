@@ -1,0 +1,21 @@
+[
+	{
+		"name":"Chills",
+		"power": 1,
+		"monType": "ice",
+		"evoStage": 1,
+		"evolvesTo": "Chills2",
+		"resolution": 32,
+		"ageToEvo": 10
+	},
+	{
+		"name":"Chills2",
+		"power": 2,
+		"monType": "ice",
+		"evoStage": 2,
+		"evolvesTo": null,
+		"resolution": 60,
+		"ageToEvo": 10
+	}
+
+]

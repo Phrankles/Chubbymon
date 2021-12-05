@@ -1,0 +1,18 @@
+[
+
+	{
+		"name": "Chills2",
+		"hunger": 4,
+		"strength": 4,
+		"effort": 4,
+		"age": 0,
+		"weight": 10,
+		"numPoop": 0,
+		"overFeeds": 0,
+		"sickness": 0,
+		"injury": 0,
+		"timeSinceEat": 0,
+		"timeSinceTrain": 0,
+		"timeSincePoop": 0
+	}
+]

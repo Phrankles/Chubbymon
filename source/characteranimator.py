@@ -87,10 +87,10 @@ class CharacterAnimator:
             else:
                 self.monSprite[0] = 6
         elif self.monster.isContent():
-            if self.monSprite[0] != 4:
-                self.monSprite[0] = 4
+            if self.monSprite[0] != 1:
+                self.monSprite[0] = 1
             else:
-                self.monSprite[0] = 6
+                self.monSprite[0] = 2
         elif self.monster.isMad():
             if self.monSprite[0] != 3:
                 self.monSprite[0] = 3
@@ -129,8 +129,8 @@ class CharacterAnimator:
 
             #Idle
             else:
-                if self.distance > 4:
-                    self.distance = 4
+                if self.distance > 6:
+                    self.distance = 6
                 self.idleInPlace()
                 self.distance -= 1
 
@@ -172,10 +172,10 @@ class CharacterAnimator:
 
         if self.monSprite.flip_x:
             meatSprite.flip_x = True
-            meatSprite.x += 20
+            meatSprite.x += (20 + (self.monster.resolution - 32))
         else:
             meatSprite.x -= 20
-
+        meatSprite.y = meatSprite.y + (self.monster.resolution - 32)
         self.animLayer.append(meatSprite)
         meatSprite[0] = 0
         self.monSprite[0] = 1

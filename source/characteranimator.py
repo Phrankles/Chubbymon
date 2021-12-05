@@ -197,7 +197,7 @@ class CharacterAnimator:
         time.sleep(.5)
 
     def feedProtien(self):
-
+        
         meatSheet, meatPalette = adafruit_imageload.load(
             "/sprites/animations/eat_meat.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
         )
@@ -212,8 +212,8 @@ class CharacterAnimator:
             meatSprite.flip_x = True
             meatSprite.x += (20 + (self.monster.resolution - 32))
         else:
-            meatSprite.x -= (20 - (self.monster.resolution - 32))
-        meatSprite.y = meatSprite.y + 2(self.monster.resolution - 32)
+            meatSprite.x -= 20
+        meatSprite.y = meatSprite.y + (self.monster.resolution - 32)
         self.animLayer.append(meatSprite)
         meatSprite[0] = 0
         self.monSprite[0] = 1

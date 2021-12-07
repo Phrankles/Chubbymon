@@ -2,19 +2,12 @@
 
 import supervisor
 
-WAIT_FOREVER = -2
-WAIT_REPLY = -1
-
-class CommandError(ValueError):
-	pass
-
-class ReceiveError(Exception):
-	pass
+from . import WAIT_FOREVER
 
 # Example from https://circuitpython.readthedocs.io/en/latest/shared-bindings/supervisor/index.html
-_TICKS_PERIOD = const(1<<29)
-_TICKS_MAX = const(_TICKS_PERIOD-1)
-_TICKS_HALFPERIOD = const(_TICKS_PERIOD//2)
+_TICKS_PERIOD = 1 << 29
+_TICKS_MAX = _TICKS_PERIOD - 1
+_TICKS_HALFPERIOD = _TICKS_PERIOD // 2
 def ticks_diff(ticks1, ticks2):
 	"Compute the signed difference between two ticks values, assuming that they are within 2**28 ticks"
 	diff = (ticks1 - ticks2) & _TICKS_MAX

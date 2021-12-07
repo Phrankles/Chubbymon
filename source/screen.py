@@ -7,6 +7,7 @@ from adafruit_display_text import label
 import terminalio
 from inputctrl import MainInputControl
 from keypad import Event
+from comm import Comm
 
 A_EVENT = Event(0, True)
 B_EVENT = Event(1, True)
@@ -43,6 +44,9 @@ class Screen:
         self.charAnimator = CharacterAnimator(self.monSprite,self.monster)
 
         self.main = displayio.Group(scale=1)
+
+
+        self.currComm = Comm(self.monster)
 
     def resetMenus(self):
         if subMenuOpen:
@@ -249,7 +253,12 @@ class IdleScreen(Screen):
             self.subMenu = StatusScreen(self.monster,self.charAnimator,self.main)
         elif self.inputCtrl.selectIdx == 2 and not self.subMenuOpen:
             self.subMenuOpen = True
-            self.subMenu = FeedScreen(self.monster,self.charAnimator,self.main,self.inputCtrl)
+            self.subMenu = FeedScreen(self.monster,self.charAnimator,self.main,self.inputCtrl)        
+        elif self.inputCtrl.selectIdx == 9 and not self.subMenuOpen:
+            print("Hello World")
+            self.subMenuOpen = True
+            self.currComm.execute("V1-838E-2D9E-45BE-156E-00EE-@800E")
+            self.subMenuOpen = False
 
 
 

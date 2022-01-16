@@ -1,13 +1,17 @@
 #Screen class
 
+import time
 import displayio
 import adafruit_imageload
+from adafruit_display_shapes.roundrect import RoundRect
 from characteranimator import CharacterAnimator
 from adafruit_display_text import label
 import terminalio
 from inputctrl import MainInputControl
 from keypad import Event
 from comm import Comm
+import gc
+import random
 
 A_EVENT = Event(0, True)
 B_EVENT = Event(1, True)
@@ -16,18 +20,46 @@ D_EVENT = Event(3, True)
 
 class Screen:
 
-    def __init__(self,monster):
+    def __init__(self,monster,inputCtrl):
 
         self.monster = monster
+        self.inputCtrl = inputCtrl
 
-        #Monster Tile Grid load
-        self.monSheet, self.monPalette = adafruit_imageload.load(
-            "/sprites/" + self.monster.name + "/" + self.monster.name + ".bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
-        )
-        self.monPalette.make_transparent(0)
-        self.monSprite = displayio.TileGrid(
-            self.monSheet, pixel_shader=self.monPalette, width=1, height=1, tile_width=self.monster.resolution, tile_height=self.monster.resolution
-        )
+        self.charAnimator = CharacterAnimator(self.monster,self.inputCtrl)
+
+        self.main = displayio.Group(scale=1)
+
+        self.transition = None
+
+    def destroy(self):
+        try:
+            self.main.remove(self.monster.monSprite)
+        except ValueError:
+            pass
+        gc.collect()
+
+    def handleInput(self):
+        self.input = self.inputCtrl.getInput()
+        if self.input != None:
+            self.inputCtrl.timeSinceInput = time.monotonic()
+
+        if self.input:
+            if self.input == A_EVENT:
+                self.transition = "idle"
+            elif self.input == B_EVENT:
+                self.transition = "idle"
+            elif self.input == D_EVENT:
+                self.transition = "idle"
+            elif self.input == C_EVENT:
+                self.transition = "idle"
+
+    def update(self):
+        self.handleInput()
+
+class IdleScreen(Screen):
+
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster,inputCtrl)
 
         #Select Tile Grid load
         self.selectSheet, self.selectPalette = adafruit_imageload.load(
@@ -41,27 +73,7 @@ class Screen:
             self.selectSheet, pixel_shader=self.selectPalette, width=1, height=1, tile_width=32, tile_height=32
         )
 
-        self.charAnimator = CharacterAnimator(self.monSprite,self.monster)
-
-        self.main = displayio.Group(scale=1)
-
-
-        self.currComm = Comm(self.monster)
-
-    def resetMenus(self):
-        if subMenuOpen:
-            self.main.pop()
-            self.subMenuOpen = False
-            self.subMenu = None
-
-        self.inputCtrl.zeroIdxs()
-
-class IdleScreen(Screen):
-
-    def __init__(self, monster):
-        super().__init__(monster)
-
-        self.inputCtrl = MainInputControl()
+        self.inputCtrl = inputCtrl
         self.input = None
 
         self.subMenuOpen = False
@@ -106,9 +118,6 @@ class IdleScreen(Screen):
         self.callSheet, self.callPalette = adafruit_imageload.load(
             "/sprites/call.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
         )
-        self.selectSheet, self.selectPalette = adafruit_imageload.load(
-            "/sprites/select.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
-        )
 
         #Set transparency index
         self.statusPalette.make_transparent(0)
@@ -121,10 +130,6 @@ class IdleScreen(Screen):
         self.journalPalette.make_transparent(0)
         self.linkPalette.make_transparent(0)
         self.callPalette.make_transparent(0)
-        self.selectPalette.make_transparent(0)
-        self.selectPalette.make_transparent(1)
-        self.selectPalette.make_transparent(2)
-        self.selectPalette.make_transparent(3)
 
 
         self.statusSprite = displayio.TileGrid(
@@ -159,8 +164,8 @@ class IdleScreen(Screen):
         )
 
         #Monster initial position
-        self.monSprite.x = 132 - self.monster.resolution
-        self.monSprite.y = 132 - self.monster.resolution
+        self.monster.monSprite.x = 132 - int(self.monster.resolution/2)
+        self.monster.monSprite.y = 100 - int(self.monster.resolution/2)
         # Icon positions main screen
         self.statusSprite.x = 20
         self.statusSprite.y = 2
@@ -183,10 +188,6 @@ class IdleScreen(Screen):
         self.callSprite.x = 188
         self.callSprite.y = 100
 
-        #self.charGroup = displayio.Group(scale=1)
-
-        #self.charGroup.append(self.monSprite)
-
         self.bgGroup = displayio.Group(scale=2)
         self.bgGroup.append(self.idleBgSprite)
 
@@ -207,7 +208,7 @@ class IdleScreen(Screen):
         self.iconGroup.append(self.callSprite)
 
         self.main.append(self.bgGroup)
-        self.main.append(self.monSprite)
+        self.main.append(self.monster.monSprite)
         self.main.append(self.selectGroup)
         self.main.append(self.iconGroup)
 
@@ -223,6 +224,8 @@ class IdleScreen(Screen):
 
     def handleInput(self):
         self.input = self.inputCtrl.getInput()
+        if self.input != None:
+            self.inputCtrl.timeSinceInput = time.monotonic()
 
         if self.input:
             if self.input == A_EVENT:
@@ -235,13 +238,11 @@ class IdleScreen(Screen):
                     self.inputCtrl.decSelectIdx()
             if self.input == D_EVENT:
                 if self.subMenu:
-                    self.main.remove(self.monSprite)
+                    self.main.remove(self.monster.monSprite)
                     self.main.pop()
                     self.subMenuOpen = False
                     self.subMenu = None
-                    self.monSprite.x = 132 - self.monster.resolution
-                    self.monSprite.y = 132 - self.monster.resolution
-                    self.main.insert(1,self.monSprite)
+                    self.main.insert(1,self.monster.monSprite)
                 elif not self.inputCtrl.selectIdx == 0:
                     self.inputCtrl.selectIdx = 0
             elif self.input == C_EVENT and not self.subMenu:
@@ -249,16 +250,17 @@ class IdleScreen(Screen):
 
     def perfAction(self,input):
         if self.inputCtrl.selectIdx == 1  and not self.subMenuOpen:
-            self.subMenuOpen = True
-            self.subMenu = StatusScreen(self.monster,self.charAnimator,self.main)
+            self.transition = "status"
         elif self.inputCtrl.selectIdx == 2 and not self.subMenuOpen:
             self.subMenuOpen = True
-            self.subMenu = FeedScreen(self.monster,self.charAnimator,self.main,self.inputCtrl)        
+            self.subMenu = FeedSubScreen(self.monster,self.charAnimator,self.main,self.inputCtrl)
+        elif self.inputCtrl.selectIdx == 3 and not self.subMenuOpen:
+            self.transition = "train"
+        elif self.inputCtrl.selectIdx == 5 and not self.subMenuOpen:
+            self.monster.numPoop = 0
+            self.charAnimator.cleanPoop()
         elif self.inputCtrl.selectIdx == 9 and not self.subMenuOpen:
-            print("Hello World")
-            self.subMenuOpen = True
-            self.currComm.execute("V1-838E-2D9E-45BE-156E-00EE-@800E")
-            self.subMenuOpen = False
+            pass
 
 
 
@@ -306,15 +308,11 @@ class IdleScreen(Screen):
             self.selectSprite.x = self.callSprite.x
             self.selectSprite.y = self.callSprite.y
 
-class StatusScreen():
+class StatusScreen(Screen):
 
-    def __init__(self, monster, charAnimator, main):
+    def __init__(self, monster,inputCtrl):
 
-        self.charAnimator = charAnimator
-
-        self.monster = monster
-
-        self.main = main
+        super().__init__(monster,inputCtrl)
 
         self.menuBgSheet,self.menuBgPalette = adafruit_imageload.load(
             "/sprites/menu_bg.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
@@ -348,10 +346,8 @@ class StatusScreen():
         self.effortArea.x = 5
         self.effortArea.y =50
 
-        self.charAnimator.monSprite.x = 80 + self.monster.resolution + 32
-        self.charAnimator.monSprite.y = 30 + self.monster.resolution - 32
-
-        self.main.remove(self.charAnimator.monSprite)
+        self.charAnimator.monSprite.x = 190 - int(self.monster.resolution/2)
+        self.charAnimator.monSprite.y = 100 - int(self.monster.resolution/2)
 
         self.statsGroup = displayio.Group(scale=2)
         self.statsGroup.append(self.menuBgSprite)
@@ -367,12 +363,11 @@ class StatusScreen():
         except ValueError:
             pass
 
-    def update(self,input):
-
+    def update(self):
+        self.handleInput()
         self.charAnimator.simpleIdle()
 
-
-class FeedScreen(Screen):
+class FeedSubScreen():
 
     def __init__(self, monster, charAnimator, main, inputCtrl):
 
@@ -435,6 +430,7 @@ class FeedScreen(Screen):
         else:
             self.handleInput(input)
         self.updateSelPos()
+        self.charAnimator.randomIdle()
 
     def handleInput(self,input):
 
@@ -468,55 +464,247 @@ class FeedScreen(Screen):
             self.main.append(temp)
         else:
             self.monster.feedProtien()
+            temp = self.main.pop()
+            temp2 = self.main.pop()
+            temp3 = self.main.pop()
+            self.main.append(self.charAnimator.animLayer)
+            self.charAnimator.feedProtein()
+            self.main.pop()
+            self.main.append(temp3)
+            self.main.append(temp2)
+            self.main.append(temp)
         pass
 
 class TrainScreen(Screen):
 
-    def __init__(self, monster):
-        super().__init__(monster)
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster, inputCtrl)
+
+        self.strLabel = label.Label(terminalio.FONT, text="Strength", color=0xFF0F00)
+        self.spdLabel = label.Label(terminalio.FONT, text="Speed", color=0xFFFFFF)
+        self.intLabel = label.Label(terminalio.FONT, text="Intellect", color=0xFFFFFF)
+
+
+        self.strLabel.y = 15
+        self.strLabel.x = 10
+        self.spdLabel.y = 30
+        self.spdLabel.x = 10
+        self.intLabel.y = 45
+        self.intLabel.x = 10
+
+        self.charAnimator.monSprite.x = 190 - int(self.monster.resolution/2)
+        self.charAnimator.monSprite.y = 100 - int(self.monster.resolution/2)
+
+        self.labelGroup = displayio.Group(scale=2)
+
+        self.labelGroup.append(self.strLabel)
+        self.labelGroup.append(self.spdLabel)
+        self.labelGroup.append(self.intLabel)
+
+        self.main.append(self.labelGroup)
+        self.main.append(self.monster.monSprite)
+
+    def handleInput(self):
+        self.input = self.inputCtrl.getInput()
+        if self.input != None:
+            self.inputCtrl.timeSinceInput = time.monotonic()
+
+        if self.input:
+            if self.input == A_EVENT:
+                self.inputCtrl.incSelectIdx()
+            elif self.input == B_EVENT:
+                self.inputCtrl.decSelectIdx()
+            elif self.input == D_EVENT:
+                self.transition = "idle"
+            elif self.input == C_EVENT:
+                self.perfAction()
+
+    def update(self):
+        self.handleInput()
+        self.updateSelPos()
+        self.charAnimator.simpleIdle()
+
+    def updateSelPos(self):
+
+        if self.inputCtrl.selectIdx == 0:
+            self.strLabel.color = 0xFF0F00
+            self.spdLabel.color = 0xFFFFFF
+            self.intLabel.color = 0xFFFFFF
+        elif self.inputCtrl.selectIdx == 1:
+            self.strLabel.color = 0xFFFFFF
+            self.spdLabel.color = 0xFF0F00
+            self.intLabel.color = 0xFFFFFF
+        else:
+            self.strLabel.color = 0xFFFFFF
+            self.spdLabel.color = 0xFFFFFF
+            self.intLabel.color = 0xFF0F00
+
+    def perfAction(self):
+
+        if self.inputCtrl.selectIdx == 0:
+            self.transition = "str-game"
+        elif self.inputCtrl.selectIdx == 1:
+            self.transition = "spd-game"
+        else:
+            self.transition = "int-game"
 
 class BattleScreen(Screen):
 
-    def __init__(self, monster):
-        super().__init__(monster)
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster, inputCtrl)
 
 class BattleScreen(Screen):
 
-    def __init__(self, monster):
-        super().__init__(monster)
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster, inputCtrl)
 
 class LightsScreen(Screen):
 
-    def __init__(self, monster):
-        super().__init__(monster)
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster, inputCtrl)
 
 class MedicalScreen(Screen):
 
-    def __init__(self, monster):
-        super().__init__(monster)
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster, inputCtrl)
 
 class JournalScreen(Screen):
 
-    def __init__(self, monster):
-        super().__init__(monster)
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster, inputCtrl)
 
 class ConnectScreen(Screen):
 
-    def __init__(self, monster):
-        super().__init__(monster)
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster, inputCtrl)
+
+class StrGameScreen(Screen):
+
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster, inputCtrl)
+
+
+        self.main.append(self.monster.monSprite)
+
+    def update(self):
+        self.handleInput()
+
+    def handleInput(self):
+
+        self.input = self.inputCtrl.getInput()
+        if self.input != None:
+            self.inputCtrl.timeSinceInput = time.monotonic()
+
+        if self.input:
+            if self.input == A_EVENT:
+                pass
+            elif self.input == B_EVENT:
+                pass
+            elif self.input == D_EVENT:
+                pass
+            elif self.input == C_EVENT:
+                pass
+
+class IntGameScreen(Screen):
+
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster, inputCtrl)
+
+        self.showRules = True
+        self.rules1 = label.Label(terminalio.FONT, text="Memorize the pattern", color=0xFF0F00)
+        self.rules2 = label.Label(terminalio.FONT, text="Repeat the pattern", color=0xFF0F00)
+        self.rules3 = label.Label(terminalio.FONT, text="to score!", color=0xFF0F00)
+
+        self.rules1.y = 15
+        self.rules2.y = 35
+        self.rules2.x = 8
+        self.rules3.y = 50
+        self.rules3.x = 30
+
+        self.rulesGroup = displayio.Group(scale=2)
+        self.rulesGroup.append(self.rules1)
+        self.rulesGroup.append(self.rules2)
+        self.rulesGroup.append(self.rules3)
+
+        self.gameGroup = displayio.Group(scale=1)
+        self.monster.monSprite.hidden = True
+
+        self.topLeftRect = RoundRect(0,0,120,68,8,fill=0xFEFFD1,outline=0x000000)
+        self.topRightRect = RoundRect(120,0,120,68,8,fill=0x708AFF,outline=0x000000)
+        self.botRightRect = RoundRect(120,68,120,68,8,fill=0x70FF8D,outline=0x000000)
+        self.botLeftRect = RoundRect(0,68,120,68,8,fill=0xFF8E8E,outline=0x000000)
+
+        self.gameGroup.append(self.topLeftRect)
+        self.gameGroup.append(self.topRightRect)
+        self.gameGroup.append(self.botRightRect)
+        self.gameGroup.append(self.botLeftRect)
+        self.gameGroup.append(self.monster.monSprite)
+
+        self.pattern = [0]#random.randint(0,3)]
+
+        self.main.append(self.rulesGroup)
+
+
+        #self.main.append(self.monster.monSprite)
+
+    def update(self):
+            self.handleInput()
 
 
 
+    def handleInput(self):
 
+        self.input = self.inputCtrl.getInput()
+        if self.input != None:
+            self.inputCtrl.timeSinceInput = time.monotonic()
 
+        if self.input:
+            if self.input == A_EVENT:
+                if self.showRules:
+                    self.showRules = False
+                    self.main.remove(self.rulesGroup)
+                    self.main.append(self.gameGroup)
+                    self.playPattern()
+                else:
+                    pass
+            elif self.input == B_EVENT:
+                if self.showRules:
+                    self.showRules = False
+                    self.main.remove(self.rulesGroup)
+                    self.main.append(self.gameGroup)
+                    self.playPattern()
+                else:
+                    pass
+            elif self.input == D_EVENT:
+                if self.showRules:
+                    self.showRules = False
+                    self.main.remove(self.rulesGroup)
+                    self.main.append(self.gameGroup)
+                    self.playPattern()
+                else:
+                    pass
+            elif self.input == C_EVENT:
+                if self.showRules:
+                    self.showRules = False
+                    self.main.remove(self.rulesGroup)
+                    self.main.append(self.gameGroup)
+                    self.playPattern()
+                else:
+                    pass
 
+    def playPattern(self):
 
+        for color in self.pattern:
+            if color == 0:
+                self.topLeftRect.fill = 0xF8FF00
+                self.monster.monSprite.x = self.topLeftRect.x + (60 - int(self.monster.resolution/2))
+                self.monster.monSprite.y = self.topLeftRect.y + (34 - int(self.monster.resolution/2))
+                self.monster.monSprite[0] = 9
+                self.monster.monSprite.hidden = False
 
-
-
-
-
-
-
-
-
+    def destroy(self):
+        try:
+            self.gameGroup.remove(self.monster.monSprite)
+        except ValueError:
+            pass
+        gc.collect()

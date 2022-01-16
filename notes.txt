@@ -1,0 +1,7 @@
+Modern               Slot
+Child                A
+Adult                D/F/H
+Perfect              C/E/G
+Ultimate             L
+Special Ultimate     J
+Super Ultimate       K

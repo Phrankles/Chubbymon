@@ -1,6 +1,8 @@
 # Monster class
 
 import time
+import adafruit_imageload
+import displayio
 
 class Monster:
 
@@ -24,6 +26,14 @@ class Monster:
         self.timeSincePoop = timeSincePoop
         self.evolvesTo = evolvesTo
         self.resolution = resolution
+
+        self.monSheet, self.monPalette = adafruit_imageload.load(
+            "/sprites/" + self.name + "/" + self.name + ".bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.monPalette.make_transparent(0)
+        self.monSprite = displayio.TileGrid(
+            self.monSheet, pixel_shader=self.monPalette, width=1, height=1, tile_width=self.resolution, tile_height=self.resolution
+        )
 
     def incHunger(self):
         if self.hunger < 4:
@@ -114,7 +124,7 @@ class Monster:
             self.die()
 
     def checkPoop(self):
-        if (time.time() - self.timeSincePoop) > 30:
+        if (time.time() - self.timeSincePoop) > 2:
             if self.numPoop <= 4:
                 print("Poop: " + str(self.numPoop))
                 self.numPoop += 1

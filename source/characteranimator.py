@@ -3,12 +3,16 @@ import time
 import random
 import adafruit_imageload
 import displayio
+import keypad
+import board
 
 class CharacterAnimator:
 
-    def __init__(self,monSprite,monster):
+    def __init__(self,monster,inputCtrl):
 
-        self.monSprite = monSprite
+        self.inputCtrl = inputCtrl
+
+        self.monSprite = monster.monSprite
 
         self.monster = monster
 
@@ -95,7 +99,7 @@ class CharacterAnimator:
             if self.monSprite[0] != 3:
                 self.monSprite[0] = 3
             else:
-                self.monSprite[0] = 6
+                self.monSprite[0] = 4
 
         
         self.animTime = time.monotonic()
@@ -103,7 +107,7 @@ class CharacterAnimator:
     def randomIdle(self):
         #Generate random movement
         if self.distance <= 0:
-            self.direction = random.randint(1,10)
+            self.direction = random.randint(1,12)
             self.distance = random.randint(2,10)
 
         if (self.animTime + .33) < time.monotonic():
@@ -160,6 +164,7 @@ class CharacterAnimator:
             self.animTime = time.monotonic()
 
     def feedMeat(self):
+
         meatSheet, meatPalette = adafruit_imageload.load(
             "/sprites/animations/eat_meat.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
         )
@@ -179,24 +184,26 @@ class CharacterAnimator:
         self.animLayer.append(meatSprite)
         meatSprite[0] = 0
         self.monSprite[0] = 1
-        time.sleep(.5)
+        time.sleep(.3)
         self.monSprite[0] = 5
-        time.sleep(.5)
+        time.sleep(.3)
         meatSprite[0] = 1
         self.monSprite[0] = 1
-        time.sleep(.5)
+        time.sleep(.3)
         self.monSprite[0] = 5
-        time.sleep(.5)        
+        time.sleep(.3)        
         meatSprite[0] = 2
         self.monSprite[0] = 1
-        time.sleep(.5)        
+        time.sleep(.3)        
         self.monSprite[0] = 5
-        time.sleep(.5)
+        time.sleep(.3)
         self.monSprite[0] = 1
         self.animLayer.pop()
-        time.sleep(.5)
+        time.sleep(.3)
 
-    def feedProtien(self):
+        self.inputCtrl.keys.events.clear()
+
+    def feedProtein(self):
         
         meatSheet, meatPalette = adafruit_imageload.load(
             "/sprites/animations/eat_meat.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
@@ -234,5 +241,10 @@ class CharacterAnimator:
         self.animLayer.pop()
         time.sleep(.5)
 
+        self.inputCtrl.keys.events.clear()
+
     def poop(self):
+        pass
+
+    def cleanPoop(self):
         pass

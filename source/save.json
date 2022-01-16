@@ -1,10 +1,10 @@
 [
 
 	{
-		"name": "Chills2",
-		"hunger": 4,
-		"strength": 4,
-		"effort": 4,
+		"name": "Chills3",
+		"hunger": 0,
+		"strength": 0,
+		"effort": 0,
 		"age": 0,
 		"weight": 10,
 		"numPoop": 0,

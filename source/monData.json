@@ -13,9 +13,18 @@
 		"power": 2,
 		"monType": "ice",
 		"evoStage": 2,
-		"evolvesTo": null,
+		"evolvesTo": "Chills3",
 		"resolution": 60,
 		"ageToEvo": 10
+	},
+	{
+		"name":"Chills3",
+		"power":3,
+		"monType":"ice",
+		"evoStage":2,
+		"evolvesTo": null,
+		"resolution":64,
+		"ageToEvo":10
 	}
 
 ]

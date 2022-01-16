@@ -4,15 +4,12 @@ from monster import Monster
 from ui import Ui
 from inputctrl import InputCtrl
 import json
+import gc
 
 monster = None
 currUi = None
 monData = None
 currSave = None
-
-# Create timers
-secTime = time.time()
-minTime = time.time()
 
 def initialize():
     global monster,currUi,monData
@@ -43,4 +40,6 @@ initialize()
 while True:
     monster.update()
     currUi.update()
+    gc.collect()
+    print(gc.mem_free())
     time.sleep(1/15)

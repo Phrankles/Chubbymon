@@ -11,8 +11,6 @@ Customizable full color animated asset packs
 
 Written in CircuitPython for easy end-user code modification
 
-**Planned Features:**
-
 Sampled audio output
 
 Connectivity (battle) with many existing V-Pets via reverse engineering of Comm protocols

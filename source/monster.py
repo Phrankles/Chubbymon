@@ -126,11 +126,9 @@ class Monster:
     def checkPoop(self):
         if (time.time() - self.timeSincePoop) > 2:
             if self.numPoop <= 4:
-                print("Poop: " + str(self.numPoop))
                 self.numPoop += 1
                 self.timeSincePoop = time.time()
             else:
-                print("Sick: " + str(self.sickness))
                 self.sickness += 1
                 self.timeSincePoop = time.time()
 
@@ -162,7 +160,6 @@ class Monster:
                 self.timeSinceTrain = time.time()
 
     def die(self):
-        print("dead")
         self.sickness = 0
         self.injury = 0
 

@@ -29,7 +29,6 @@ class Ui:
         self.display = self.LCD.returnLCD()
 
     def update(self):
-        print(self.currScreen.transition)
         #screen transitions
     	if self.currScreen.transition == "status":
             self.inputCtrl = MainInputControl(self.keys,self.inputCtrl.timeSinceInput)

@@ -12,6 +12,8 @@ from keypad import Event
 from comm import Comm
 import gc
 import random
+import simpleio
+import board
 
 A_EVENT = Event(0, True)
 B_EVENT = Event(1, True)
@@ -627,12 +629,11 @@ class IntGameScreen(Screen):
         self.rulesGroup.append(self.rules3)
 
         self.gameGroup = displayio.Group(scale=1)
-        self.monster.monSprite.hidden = True
 
-        self.topLeftRect = RoundRect(0,0,120,68,8,fill=0xFEFFD1,outline=0x000000)
-        self.topRightRect = RoundRect(120,0,120,68,8,fill=0x708AFF,outline=0x000000)
-        self.botRightRect = RoundRect(120,68,120,68,8,fill=0x70FF8D,outline=0x000000)
-        self.botLeftRect = RoundRect(0,68,120,68,8,fill=0xFF8E8E,outline=0x000000)
+        self.topLeftRect = RoundRect(0,0,120,68,12,fill=0xFEFFD1,outline=0x000000)
+        self.topRightRect = RoundRect(120,0,120,68,12,fill=0xAEBDFF,outline=0x000000)
+        self.botRightRect = RoundRect(120,68,120,68,12,fill=0xB4FFC4,outline=0x000000)
+        self.botLeftRect = RoundRect(0,68,120,68,12,fill=0xFFA1A1,outline=0x000000)
 
         self.gameGroup.append(self.topLeftRect)
         self.gameGroup.append(self.topRightRect)
@@ -640,7 +641,16 @@ class IntGameScreen(Screen):
         self.gameGroup.append(self.botLeftRect)
         self.gameGroup.append(self.monster.monSprite)
 
-        self.pattern = [0]#random.randint(0,3)]
+        self.pattern = [random.randint(0,3)]
+        self.patternPlayed = False
+
+        self.score = 0
+
+        self.inputIdx = 0
+
+        self.completedPattern = False
+
+        self.gameOver = False
 
         self.main.append(self.rulesGroup)
 
@@ -648,7 +658,28 @@ class IntGameScreen(Screen):
         #self.main.append(self.monster.monSprite)
 
     def update(self):
+        if not self.gameOver:
             self.handleInput()
+        else:
+            self.endGame()
+
+    def endGame(self):
+
+        self.gameGroup.remove(self.monster.monSprite)
+        endText1 = label.Label(terminalio.FONT, text="Game Over!", color=0xFF0F00)
+        endText2 = label.Label(terminalio.FONT, text="Score: " + str(self.score), color=0xFF0F00)
+        endText1.y = 15
+        endText2.y = 35
+        self.rulesGroup.remove(self.rules1)
+        self.rulesGroup.remove(self.rules2)
+        self.rulesGroup.remove(self.rules3)
+        self.rulesGroup.append(endText1)
+        self.rulesGroup.append(endText2)
+        self.main.remove(self.gameGroup)
+        self.main.append(self.rulesGroup)
+        time.sleep(4)
+        self.transition = "idle"
+
 
 
 
@@ -692,6 +723,54 @@ class IntGameScreen(Screen):
                 else:
                     pass
 
+        if self.patternPlayed and not self.completedPattern:
+            self.charAnimator.simpleIdle()
+            self.testInput(self.input)
+        elif not self.patternPlayed and self.completedPattern:
+            self.playPattern()
+
+    def testInput(self,input):
+
+        if self.inputIdx >= len(self.pattern):
+            self.completedPattern = True
+            self.pattern.append(random.randint(0,3))
+            self.patternPlayed = False
+            self.inputIdx = 0
+            self.score += 1
+
+        if not self.completedPattern:
+            if self.input == A_EVENT and self.pattern[self.inputIdx] == 0:
+                self.topLeftRect.fill = 0xF8FF00
+                self.monster.monSprite[0] = 5
+                simpleio.tone(board.GP14, 262, duration=0.3)
+                time.sleep(.3)
+                self.topLeftRect.fill = 0xFEFFD1
+                self.inputIdx += 1
+            elif self.input == C_EVENT and self.pattern[self.inputIdx] == 1:
+                self.topRightRect.fill = 0x002FFF
+                self.monster.monSprite[0] = 5
+                simpleio.tone(board.GP14, 294, duration=0.3)
+                time.sleep(.3)
+                self.topRightRect.fill = 0xAEBDFF
+                self.inputIdx += 1
+            elif self.input == B_EVENT and self.pattern[self.inputIdx] == 2:
+                self.botLeftRect.fill = 0xFF0000
+                self.monster.monSprite[0] = 5
+                simpleio.tone(board.GP14, 330, duration=0.3)
+                time.sleep(.3)
+                self.botLeftRect.fill = 0xFFA1A1
+                self.inputIdx += 1
+            elif self.input == D_EVENT and self.pattern[self.inputIdx] == 3:
+                self.botRightRect.fill = 0x00FF36
+                self.monster.monSprite[0] = 5
+                simpleio.tone(board.GP14, 392, duration=0.3)
+                time.sleep(.3)
+                self.botRightRect.fill = 0xB4FFC4
+                self.inputIdx += 1
+            elif self.input == A_EVENT or self.input == B_EVENT or self.input == C_EVENT or self.input == D_EVENT:
+                self.gameOver = True
+
+
     def playPattern(self):
 
         for color in self.pattern:
@@ -699,12 +778,61 @@ class IntGameScreen(Screen):
                 self.topLeftRect.fill = 0xF8FF00
                 self.monster.monSprite.x = self.topLeftRect.x + (60 - int(self.monster.resolution/2))
                 self.monster.monSprite.y = self.topLeftRect.y + (34 - int(self.monster.resolution/2))
-                self.monster.monSprite[0] = 9
-                self.monster.monSprite.hidden = False
+                self.monster.monSprite.flip_x = True
+                self.monster.monSprite[0] = 6
+                time.sleep(.25)
+                self.monster.monSprite[0] = 5
+                simpleio.tone(board.GP14, 262, duration=0.3)
+                time.sleep(.3)
+                self.monster.monSprite[0] = 6
+                self.topLeftRect.fill = 0xFEFFD1
+            elif color == 1:
+                self.topRightRect.fill = 0x002FFF
+                self.monster.monSprite.x = self.topRightRect.x + (60 - int(self.monster.resolution/2))
+                self.monster.monSprite.y = self.topRightRect.y + (34 - int(self.monster.resolution/2))
+                self.monster.monSprite.flip_x = False
+                self.monster.monSprite[0] = 6
+                time.sleep(.25)
+                self.monster.monSprite[0] = 5
+                simpleio.tone(board.GP14, 294, duration=0.3)
+                time.sleep(.3)
+                self.monster.monSprite[0] = 6
+                self.topRightRect.fill = 0xAEBDFF
+            elif color == 2:
+                self.botLeftRect.fill = 0xFF0000
+                self.monster.monSprite.x = self.botLeftRect.x + (60 - int(self.monster.resolution/2))
+                self.monster.monSprite.y = self.botLeftRect.y + (34 - int(self.monster.resolution/2))
+                self.monster.monSprite.flip_x = True
+                self.monster.monSprite[0] = 6
+                time.sleep(.25)
+                self.monster.monSprite[0] = 5
+                simpleio.tone(board.GP14, 330, duration=0.3)
+                time.sleep(.3)
+                self.monster.monSprite[0] = 6
+                self.botLeftRect.fill = 0xFFA1A1
+            elif color == 3:
+                self.botRightRect.fill = 0x00FF36
+                self.monster.monSprite.x = self.botRightRect.x + (60 - int(self.monster.resolution/2))
+                self.monster.monSprite.y = self.botRightRect.y + (34 - int(self.monster.resolution/2))
+                self.monster.monSprite.flip_x = False
+                self.monster.monSprite[0] = 6
+                time.sleep(.25)
+                self.monster.monSprite[0] = 5
+                simpleio.tone(board.GP14, 392, duration=0.3)
+                time.sleep(.3)
+                self.monster.monSprite[0] = 6
+                self.botRightRect.fill = 0xB4FFC4
+            time.sleep(.1)
+        self.monster.monSprite.x = 120 - int(self.monster.resolution/2)
+        self.monster.monSprite.y = 68 - int(self.monster.resolution/2)
+        self.patternPlayed = True
+        self.completedPattern = False
+        self.inputCtrl.timeSinceInput = time.monotonic()
+        self.inputCtrl.keys.events.clear()
+        self.input = None
 
     def destroy(self):
         try:
             self.gameGroup.remove(self.monster.monSprite)
         except ValueError:
             pass
-        gc.collect()

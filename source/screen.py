@@ -4,6 +4,7 @@ import time
 import displayio
 import adafruit_imageload
 from adafruit_display_shapes.roundrect import RoundRect
+from adafruit_display_shapes.rect import Rect
 from characteranimator import CharacterAnimator
 from adafruit_display_text import label
 import terminalio
@@ -37,7 +38,11 @@ class Screen:
         try:
             self.main.remove(self.monster.monSprite)
         except ValueError:
-            pass
+            pass           
+        try:
+            self.main.remove(self.monster.idleBgSprite)
+        except ValueError:
+            pass 
         gc.collect()
 
     def handleInput(self):
@@ -80,14 +85,6 @@ class IdleScreen(Screen):
 
         self.subMenuOpen = False
         self.subMenu = None
-
-        #BG Sprite load
-        self.idleBgSheet, self.idleBgPalette = adafruit_imageload.load(
-            "/sprites/" + self.monster.name + "/" + self.monster.name + "_bg.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
-        )
-        self.idleBgSprite = displayio.TileGrid(
-            self.idleBgSheet, pixel_shader=self.idleBgPalette, width=1, height=1, tile_width=120, tile_height=68
-        )
 
         #Idle Menu Sprite load
         self.statusSheet, self.statusPalette = adafruit_imageload.load(
@@ -191,7 +188,7 @@ class IdleScreen(Screen):
         self.callSprite.y = 100
 
         self.bgGroup = displayio.Group(scale=2)
-        self.bgGroup.append(self.idleBgSprite)
+        self.bgGroup.append(self.monster.idleBgSprite)
 
 
         self.selectGroup = displayio.Group(scale=1)
@@ -213,8 +210,6 @@ class IdleScreen(Screen):
         self.main.append(self.monster.monSprite)
         self.main.append(self.selectGroup)
         self.main.append(self.iconGroup)
-
-
 
     def update(self):
         if not self.subMenu:
@@ -262,9 +257,8 @@ class IdleScreen(Screen):
             self.monster.numPoop = 0
             self.charAnimator.cleanPoop()
         elif self.inputCtrl.selectIdx == 9 and not self.subMenuOpen:
-            pass
-
-
+            comm = Comm()
+            comm.execute("V1-836E-212E-288E-182E-018E-@800E")
 
     def updateSelPos(self):
         if self.inputCtrl.selectIdx != 0:
@@ -310,6 +304,13 @@ class IdleScreen(Screen):
             self.selectSprite.x = self.callSprite.x
             self.selectSprite.y = self.callSprite.y
 
+    def destroy(self):
+        self.main.remove(self.monster.monSprite)
+        self.bgGroup.remove(self.monster.idleBgSprite)
+        for item in self.main:
+            self.main.pop()
+        gc.collect()
+
 class StatusScreen(Screen):
 
     def __init__(self, monster,inputCtrl):
@@ -352,7 +353,7 @@ class StatusScreen(Screen):
         self.charAnimator.monSprite.y = 100 - int(self.monster.resolution/2)
 
         self.statsGroup = displayio.Group(scale=2)
-        self.statsGroup.append(self.menuBgSprite)
+        self.statsGroup.append(self.monster.idleBgSprite)
         self.statsGroup.append(self.nameArea)
         self.statsGroup.append(self.ageArea)
         self.statsGroup.append(self.weightArea)
@@ -368,6 +369,12 @@ class StatusScreen(Screen):
     def update(self):
         self.handleInput()
         self.charAnimator.simpleIdle()
+
+    def destroy(self):
+        self.statsGroup.remove(self.monster.idleBgSprite)
+        self.main.remove(self.monster.monSprite)
+        for item in self.main:
+            self.main.pop()
 
 class FeedSubScreen():
 
@@ -654,9 +661,6 @@ class IntGameScreen(Screen):
 
         self.main.append(self.rulesGroup)
 
-
-        #self.main.append(self.monster.monSprite)
-
     def update(self):
         if not self.gameOver:
             self.handleInput()
@@ -679,9 +683,6 @@ class IntGameScreen(Screen):
         self.main.append(self.rulesGroup)
         time.sleep(4)
         self.transition = "idle"
-
-
-
 
     def handleInput(self):
 
@@ -742,28 +743,28 @@ class IntGameScreen(Screen):
             if self.input == A_EVENT and self.pattern[self.inputIdx] == 0:
                 self.topLeftRect.fill = 0xF8FF00
                 self.monster.monSprite[0] = 5
-                simpleio.tone(board.GP14, 262, duration=0.3)
+                simpleio.tone(board.GP9, 262, duration=0.3)
                 time.sleep(.3)
                 self.topLeftRect.fill = 0xFEFFD1
                 self.inputIdx += 1
             elif self.input == C_EVENT and self.pattern[self.inputIdx] == 1:
                 self.topRightRect.fill = 0x002FFF
                 self.monster.monSprite[0] = 5
-                simpleio.tone(board.GP14, 294, duration=0.3)
+                simpleio.tone(board.GP9, 294, duration=0.3)
                 time.sleep(.3)
                 self.topRightRect.fill = 0xAEBDFF
                 self.inputIdx += 1
             elif self.input == B_EVENT and self.pattern[self.inputIdx] == 2:
                 self.botLeftRect.fill = 0xFF0000
                 self.monster.monSprite[0] = 5
-                simpleio.tone(board.GP14, 330, duration=0.3)
+                simpleio.tone(board.GP9, 330, duration=0.3)
                 time.sleep(.3)
                 self.botLeftRect.fill = 0xFFA1A1
                 self.inputIdx += 1
             elif self.input == D_EVENT and self.pattern[self.inputIdx] == 3:
                 self.botRightRect.fill = 0x00FF36
                 self.monster.monSprite[0] = 5
-                simpleio.tone(board.GP14, 392, duration=0.3)
+                simpleio.tone(board.GP9, 392, duration=0.3)
                 time.sleep(.3)
                 self.botRightRect.fill = 0xB4FFC4
                 self.inputIdx += 1
@@ -782,7 +783,7 @@ class IntGameScreen(Screen):
                 self.monster.monSprite[0] = 6
                 time.sleep(.25)
                 self.monster.monSprite[0] = 5
-                simpleio.tone(board.GP14, 262, duration=0.3)
+                simpleio.tone(board.GP9, 262, duration=0.3)
                 time.sleep(.3)
                 self.monster.monSprite[0] = 6
                 self.topLeftRect.fill = 0xFEFFD1
@@ -794,7 +795,7 @@ class IntGameScreen(Screen):
                 self.monster.monSprite[0] = 6
                 time.sleep(.25)
                 self.monster.monSprite[0] = 5
-                simpleio.tone(board.GP14, 294, duration=0.3)
+                simpleio.tone(board.GP9, 294, duration=0.3)
                 time.sleep(.3)
                 self.monster.monSprite[0] = 6
                 self.topRightRect.fill = 0xAEBDFF
@@ -806,7 +807,7 @@ class IntGameScreen(Screen):
                 self.monster.monSprite[0] = 6
                 time.sleep(.25)
                 self.monster.monSprite[0] = 5
-                simpleio.tone(board.GP14, 330, duration=0.3)
+                simpleio.tone(board.GP9, 330, duration=0.3)
                 time.sleep(.3)
                 self.monster.monSprite[0] = 6
                 self.botLeftRect.fill = 0xFFA1A1
@@ -818,7 +819,7 @@ class IntGameScreen(Screen):
                 self.monster.monSprite[0] = 6
                 time.sleep(.25)
                 self.monster.monSprite[0] = 5
-                simpleio.tone(board.GP14, 392, duration=0.3)
+                simpleio.tone(board.GP9, 392, duration=0.3)
                 time.sleep(.3)
                 self.monster.monSprite[0] = 6
                 self.botRightRect.fill = 0xB4FFC4
@@ -834,5 +835,258 @@ class IntGameScreen(Screen):
     def destroy(self):
         try:
             self.gameGroup.remove(self.monster.monSprite)
+        except ValueError:
+            pass
+
+class SpdGameScreen(Screen):
+
+    def __init__(self, monster, inputCtrl):
+        super().__init__(monster, inputCtrl)
+
+        self.holeSheet, self.holePalette = adafruit_imageload.load(
+            "/sprites/games/spd/hole.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.holeSprite = displayio.TileGrid(
+            self.holeSheet, pixel_shader=self.holePalette, width=1, height=1, tile_width=16, tile_height=16
+        )
+        self.targetSheet, self.targetPalette = adafruit_imageload.load(
+            "/sprites/games/spd/target.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.targetSprite = displayio.TileGrid(
+            self.targetSheet, pixel_shader=self.targetPalette, width=1, height=1, tile_width=16, tile_height=16
+        )
+
+        self.holePalette.make_transparent(0)
+        self.targetPalette.make_transparent(0)
+
+        self.enemyScale = displayio.Group(scale=3)
+        self.enemyScale.append(self.holeSprite)
+
+        self.enemies = displayio.Group(scale=1)
+        self.enemies.append(self.enemyScale)
+
+        self.enemyScale.x = 200
+        self.enemyScale.y = 56
+
+        self.showRules = True
+        self.rules1 = label.Label(terminalio.FONT, text="Jump to avoid", color=0xFF0F00)
+        self.rules2 = label.Label(terminalio.FONT, text="The Obstacles", color=0xFF0F00)
+
+        self.rules1.y = 15
+        self.rules2.y = 35
+        self.rules2.x = 8
+
+        self.rulesGroup = displayio.Group(scale=2)
+        self.rulesGroup.append(self.rules1)
+        self.rulesGroup.append(self.rules2)
+
+        self.street = Rect(0,50,240,68,fill=0x706f6d)
+        self.bottom = Rect(0,118,240,15,fill=0x262525)
+
+        self.marks = displayio.Group(scale=1)
+        for x in range(12):
+            self.marks.append(Rect(x*24,84,15,3,fill=0xb0f00e))
+
+        self.rail1 = Rect(0,40,240,4,fill=0x4f4e4d)
+        self.rail2 = Rect(0,108,240,4,fill=0x4f4e4d)
+
+        self.topRails = displayio.Group(scale=1)
+        for x in range(26):
+            self.topRails.append(Rect(x*10,40,5,10,fill=0x403e3d))
+
+        self.botRails = displayio.Group(scale=1)
+        for x in range(26):
+            self.botRails.append(Rect(x*10,108,5,10,fill=0x403e3d))
+
+        self.monster.monSprite.x = 10
+        self.monster.monSprite.y = 70 - int(self.monster.resolution/2)
+
+        self.bgGroup = displayio.Group(scale=2)
+        self.bgGroup.append(self.monster.idleBgSprite)
+
+        self.btnLabel1 = label.Label(terminalio.FONT, text="Jump", color=0x000000)
+        self.btnLabel2 = label.Label(terminalio.FONT, text="Attack", color=0x000000)
+        self.btnLabel3 = label.Label(terminalio.FONT, text="Defend", color=0x000000)
+
+        self.btnLabel1.x = 2
+        self.btnLabel1.y = 4
+        self.btnLabel2.x = 82
+        self.btnLabel2.y = 4
+        self.btnLabel3.x = 82
+        self.btnLabel3.y = 62
+
+        self.buttonGroup = displayio.Group(scale=2)
+        self.buttonGroup.append(self.btnLabel1)
+        self.buttonGroup.append(self.btnLabel2)
+        self.buttonGroup.append(self.btnLabel3)
+
+        self.gameGroup = displayio.Group(scale=1)
+
+        self.gameGroup.append(self.bgGroup)
+        self.gameGroup.append(self.street)
+        self.gameGroup.append(self.bottom)
+        self.gameGroup.append(self.rail1)
+        self.gameGroup.append(self.topRails)
+        self.gameGroup.append(self.marks)
+        self.gameGroup.append(self.enemies)
+        self.gameGroup.append(self.monster.monSprite)
+        self.gameGroup.append(self.botRails)
+        self.gameGroup.append(self.rail2)
+        self.gameGroup.append(self.buttonGroup)
+
+        self.main.append(self.rulesGroup)
+
+        self.gameOver = False
+        self.score = 1
+
+        self.moveTime = time.monotonic()
+        self.animSpeed = .33
+        self.speed = 5
+        self.jumping = False
+        self.defending = False
+        self.attacking = False
+        self.enemyAdded = time.monotonic()
+
+    def update(self):
+        #print(gc.mem_free())
+        if not self.gameOver:
+            self.handleInput()
+        else:
+            self.endGame()
+
+        if not self.showRules:
+            if not self.jumping and not self.attacking and not self.defending:
+                self.charAnimator.walkInPlace(False,self.animSpeed)
+            elif self.jumping:
+                if not self.charAnimator.jump(False,self.animSpeed):
+                    self.jumping = False
+            elif self.defending:
+                pass
+            elif self.attacking:
+                pass
+            self.moveElements()
+            self.checkCollisions()
+            if (self.enemyAdded + 50/self.speed) < time.monotonic():
+                self.addEnemy()
+                self.enemyAdded = time.monotonic()
+            self.speed = 5 + self.score
+            self.animSpeed = .33 / self.score
+
+    def addEnemy(self):
+        enemyToAdd = random.randint(0,1)
+        print(enemyToAdd)
+        if enemyToAdd == 0:
+            newEnemyScale = displayio.Group(scale=3)
+            newEnemySprite = displayio.TileGrid(
+                self.holeSheet, pixel_shader=self.holePalette, width=1, height=1, tile_width=16, tile_height=16
+            )
+            newEnemyScale.append(newEnemySprite)
+            newEnemyScale.y = 56
+            newEnemyScale.x = 240 + random.randint(0,60)
+            self.enemies.append(newEnemyScale)
+        elif enemyToAdd == 1:
+            newEnemyScale = displayio.Group(scale=4)
+            newEnemySprite = displayio.TileGrid(
+                self.targetSheet, pixel_shader=self.targetPalette, width=1, height=1, tile_width=16, tile_height=16
+            )
+            newEnemyScale.append(newEnemySprite)
+            newEnemyScale.y = 40
+            newEnemyScale.x = 240 + random.randint(0,60)
+            self.enemies.append(newEnemyScale)
+        else:
+            pass
+
+    def moveElements(self):
+        if (self.moveTime + self.animSpeed) < time.monotonic():
+            for mark in self.marks:
+                if mark.x <= -24:
+                    mark.x += 264 - (3 + self.speed)
+                else:
+                    mark.x -= 3 + self.speed
+            for rail in self.topRails:
+                if rail.x <= -10:
+                    rail.x += 250 - (3 + self.speed)
+                else:
+                    rail.x -= 3 + self.speed
+            for rail in self.botRails:
+                if rail.x <= -10:
+                    rail.x += 250 - (3 + self.speed)
+                else:
+                    rail.x -= 3 + self.speed
+            for enemy in self.enemies:
+                if enemy.x <= -64:
+                    self.enemies.remove(enemy)
+                    self.score += 1
+                else:
+                    enemy.x -= 3 + self.speed
+
+
+            self.moveTime = time.monotonic()
+
+    def checkCollisions(self):
+        for enemy in self.enemies:
+            if enemy.x < self.monster.monSprite.x + self.monster.resolution - 15 and enemy.x > self.monster.monSprite.x and not self.jumping:
+                self.gameOver = True
+
+    def endGame(self):
+
+        self.gameGroup.remove(self.monster.monSprite)
+        endText1 = label.Label(terminalio.FONT, text="Game Over!", color=0xFF0F00)
+        endText2 = label.Label(terminalio.FONT, text="Score: " + str(self.score), color=0xFF0F00)
+        endText1.y = 15
+        endText2.y = 35
+        self.rulesGroup.remove(self.rules1)
+        self.rulesGroup.remove(self.rules2)
+        self.rulesGroup.append(endText1)
+        self.rulesGroup.append(endText2)
+        self.main.remove(self.gameGroup)
+        self.main.append(self.rulesGroup)
+        time.sleep(4)
+        self.transition = "idle"
+
+    def handleInput(self):
+
+        self.input = self.inputCtrl.getInput()
+        if self.input != None:
+            self.inputCtrl.timeSinceInput = time.monotonic()
+
+        if self.input:
+            if self.input == A_EVENT:
+                if self.showRules:
+                    self.showRules = False
+                    self.main.remove(self.rulesGroup)
+                    self.main.append(self.gameGroup)
+                else:
+                    self.jumping = True
+
+            elif self.input == B_EVENT:
+                if self.showRules:
+                    self.showRules = False
+                    self.main.remove(self.rulesGroup)
+                    self.main.append(self.gameGroup)
+                else:
+                    pass
+            elif self.input == D_EVENT:
+                if self.showRules:
+                    self.showRules = False
+                    self.main.remove(self.rulesGroup)
+                    self.main.append(self.gameGroup)
+                else:
+                    self.attacking = True
+            elif self.input == C_EVENT:
+                if self.showRules:
+                    self.showRules = False
+                    self.main.remove(self.rulesGroup)
+                    self.main.append(self.gameGroup)
+                else:
+                    self.defending = True
+
+    def destroy(self):
+        try:
+            self.gameGroup.remove(self.monster.monSprite)
+        except ValueError:
+            pass
+        try:
+            self.bgGroup.remove(self.monster.idleBgSprite)
         except ValueError:
             pass

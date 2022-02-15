@@ -40,6 +40,5 @@ initialize()
 while True:
     monster.update()
     currUi.update()
-    gc.collect()
     #print(gc.mem_free())
     time.sleep(1/15)

@@ -35,6 +35,13 @@ class Monster:
             self.monSheet, pixel_shader=self.monPalette, width=1, height=1, tile_width=self.resolution, tile_height=self.resolution
         )
 
+        self.idleBgSheet, self.idleBgPalette = adafruit_imageload.load(
+            "/sprites/" + self.name + "/" + self.name + "_bg.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette
+        )
+        self.idleBgSprite = displayio.TileGrid(
+            self.idleBgSheet, pixel_shader=self.idleBgPalette, width=1, height=1, tile_width=120, tile_height=68
+        )
+
     def incHunger(self):
         if self.hunger < 4:
             self.hunger += 1

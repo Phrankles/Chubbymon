@@ -10,7 +10,7 @@ import dmcomm.hardware as hw
 import dmcomm.protocol
 
 class Comm:
-    def __init__(self,monster):
+    def __init__(self):
         #self.pins_extra_power = [board.GP11, board.GP13, board.GP18]
         #self.outputs_extra_power = []
         #for pin in self.pins_extra_power:
@@ -20,11 +20,11 @@ class Comm:
         #    self.outputs_extra_power.append(output)
 
         self.controller = hw.Controller()
-        self.controller.register(hw.ProngOutput(board.GP19, board.GP21))
-        self.controller.register(hw.ProngInput(board.GP26))
-        self.controller.register(hw.InfraredOutput(board.GP16))
-        self.controller.register(hw.InfraredInputModulated(board.GP17))
-        self.controller.register(hw.InfraredInputRaw(board.GP14))
+        self.controller.register(hw.ProngOutput(board.GP26, board.GP28))
+        self.controller.register(hw.ProngInput(board.GP22))
+        #self.controller.register(hw.InfraredOutput(board.GP16))
+        #self.controller.register(hw.InfraredInputModulated(board.GP17))
+        #self.controller.register(hw.InfraredInputRaw(board.GP14))
         #self.usb_cdc.console.timeout = 1
         self.digirom = None
 

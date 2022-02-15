@@ -25,6 +25,24 @@
 		"evolvesTo": null,
 		"resolution":64,
 		"ageToEvo":10
+	},
+	{
+		"name":"Dino",
+		"power":1,
+		"monType":"fire",
+		"evoStage":1,
+		"evolvesTo": "Dino2",
+		"resolution":50,
+		"ageToEvo":10
+	},
+	{
+		"name":"Dino2",
+		"power":2,
+		"monType":"fire",
+		"evoStage":2,
+		"evolvesTo": "Dino3",
+		"resolution":56,
+		"ageToEvo":10
 	}
 
 ]

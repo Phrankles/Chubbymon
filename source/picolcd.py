@@ -11,13 +11,13 @@ class PicoLCD:
 
     def __init__(self):
         displayio.release_displays()
-        self.spi = busio.SPI(clock=board.GP10,MOSI=board.GP11)
-        self.tft_cs = board.GP9
-        self.tft_dc = board.GP8
-        self.tft_reset = board.GP12
-        self.display_bus = displayio.FourWire(self.spi, command=self.tft_dc, chip_select=self.tft_cs,reset=self.tft_reset)
+        self.spi = busio.SPI(clock=board.GP18,MOSI=board.GP19)
+        self.tft_cs = board.GP17
+        self.tft_dc = board.GP16
+        #self.tft_reset = board.RUN
+        self.display_bus = displayio.FourWire(self.spi, command=self.tft_dc, chip_select=self.tft_cs)
         self.display = ST7789(
-            self.display_bus, rotation=270, width=240, height=135, rowstart=40, colstart=53, backlight_pin = board.GP13
+            self.display_bus, rotation=90, width=240, height=135, rowstart=40, colstart=53, backlight_pin = board.GP20
         )
 
     def returnLCD(self):
@@ -29,4 +29,3 @@ class PicoLCD:
         
     def reinitLCD(self):
         self.display.brightness = 1
-        

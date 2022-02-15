@@ -24,6 +24,8 @@ class CharacterAnimator:
 
         self.animLayer = displayio.Group(scale=1)
 
+        self.jumpFrame = 0
+
     def walkUpRight(self):
 
         self.monSprite.flip_x = True
@@ -162,6 +164,34 @@ class CharacterAnimator:
                 else:
                     self.monSprite[0] = 4
             self.animTime = time.monotonic()
+
+    def walkInPlace(self,isLeft,speed):
+        if not isLeft:
+            self.monSprite.flip_x = True
+        if (self.animTime + speed) < time.monotonic():
+            if self.monSprite[0] != 0:
+                self.monSprite[0] = 0
+            else:
+                self.monSprite[0] = 1
+            self.animTime = time.monotonic()
+
+    def jump(self,isLeft,speed):
+        self.monSprite[0] = 0
+        if not isLeft:
+            self.monSprite.flip_x = True
+
+        if (self.animTime + speed) < time.monotonic():
+            if self.jumpFrame < 5:
+                self.monSprite.y -= 5
+            elif self.jumpFrame < 10:
+                self.monSprite.y += 5
+            else:
+                self.jumpFrame = 0
+                return False
+
+            self.jumpFrame += 1
+            self.animTime = time.monotonic()
+        return True
 
     def feedMeat(self):
 

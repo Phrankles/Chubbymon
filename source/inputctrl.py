@@ -72,14 +72,4 @@ class TrainInputControl(InputCtrl):
                 self.selectIdx = 2
             elif self.selectIdx > 0:
                 self.selectIdx -= 1
-
-class TrainStrInputControl(InputCtrl):
-
-    def __init__(self,keys,timeSinceInput):
-        super().__init__(keys,timeSinceInput)
-
-class TrainIntInputControl(InputCtrl):
-
-    def __init__(self,keys,timeSinceInput):
-        super().__init__(keys,timeSinceInput)
-    
+                
